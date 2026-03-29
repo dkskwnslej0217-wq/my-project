@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AI 우주 시스템</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;overflow:hidden;font-family:'Segoe UI',sans-serif}
+canvas{display:block}
+
+/* HUD */
+#hud{
+  position:fixed;top:0;left:0;right:0;
+  padding:20px 32px;display:flex;justify-content:space-between;align-items:center;
+  z-index:10;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent)
+}
+#hud-title{
+  font-size:1.1rem;font-weight:700;letter-spacing:.15em;
+  background:linear-gradient(135deg,#a78bfa,#60a5fa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
+}
+#hud-hint{color:rgba(255,255,255,.35);font-size:.78rem;letter-spacing:.05em}
+
+/* 행성 라벨 */
+.planet-label{
+  position:fixed;pointer-events:none;z-index:5;
+  transform:translate(-50%,-50%);
+  text-align:center;
+}
+.planet-label .icon{font-size:1.6rem;display:block;animation:float 3s ease-in-out infinite}
+.planet-label .name{
+  color:rgba(255,255,255,.85);font-size:.72rem;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;
+  text-shadow:0 0 12px currentColor;margin-top:4px;display:block
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* 팝업 */
+#popup{
+  position:fixed;z-index:20;
+  top:50%;left:50%;transform:translate(-50%,-50%) scale(0);
+  width:360px;
+  background:rgba(5,5,20,.92);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:24px;
+  padding:36px;
+  backdrop-filter:blur(24px);
+  transition:transform .4s cubic-bezier(.23,1,.32,1),opacity .3s;
+  opacity:0
+}
+#popup.show{transform:translate(-50%,-50%) scale(1);opacity:1}
+#popup-icon{font-size:3rem;margin-bottom:12px;display:block;text-align:center}
+#popup-title{
+  font-size:1.3rem;font-weight:700;text-align:center;margin-bottom:8px;
+  background:linear-gradient(135deg,#a78bfa,#60a5fa);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
+}
+#popup-desc{color:rgba(255,255,255,.6);font-size:.88rem;line-height:1.75;text-align:center;margin-bottom:20px}
+#popup-tags{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-bottom:24px}
+#popup-tags span{
+  padding:4px 12px;border-radius:999px;font-size:.72rem;
+  background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.5)
+}
+#popup-close{
+  width:100%;padding:12px;border-radius:12px;
+  background:linear-gradient(135deg,#7c3aed,#2563eb);
+  color:#fff;font-weight:600;font-size:.88rem;
+  border:none;cursor:pointer;transition:opacity .2s
+}
+#popup-close:hover{opacity:.85}
+
+/* 워프 오버레이 */
+#warp{
+  position:fixed;inset:0;z-index:15;pointer-events:none;
+  background:radial-gradient(ellipse at center,transparent 0%,#000 100%);
+  opacity:0;transition:opacity .3s
+}
+
+/* 크로스헤어 */
+#crosshair{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:20px;height:20px;pointer-events:none;z-index:5;
+}
+#crosshair::before,#crosshair::after{
+  content:'';position:absolute;background:rgba(255,255,255,.2);
+}
+#crosshair::before{width:100%;height:1px;top:50%;left:0}
+#crosshair::after{width:1px;height:100%;top:0;left:50%}
+
+/* 하단 상태바 */
+#statusbar{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  z-index:10;pointer-events:none;
+  color:rgba(255,255,255,.3);font-size:.75rem;letter-spacing:.08em;text-align:center
+}
+#statusbar span{color:rgba(255,255,255,.6)}
+</style>
+</head>
+<body>
+
+<div id="hud">
+  <div id="hud-title">✦ AI UNIVERSE SYSTEM</div>
+  <div id="hud-hint">행성 클릭 → 모듈 탐색</div>
+</div>
+
+<div id="crosshair"></div>
+
+<div id="warp"></div>
+
+<div id="popup">
+  <span id="popup-icon">🔍</span>
+  <div id="popup-title">웹서치 모듈</div>
+  <div id="popup-desc">설명</div>
+  <div id="popup-tags"></div>
+  <button id="popup-close" onclick="closePopup()">탐색 완료 ✓</button>
+</div>
+
+<div id="statusbar">좌클릭: 행성 탐색 &nbsp;|&nbsp; 드래그: 시점 회전 &nbsp;|&nbsp; 스크롤: 줌</div>
+
+<script>
+// ══════════════════════════════════════
+// 행성 데이터
+// ══════════════════════════════════════
+const PLANETS = [
+  {
+    name:'웹서치',icon:'🔍',
+    color:0x3b82f6,emissive:0x1d4ed8,
+    orbit:6,speed:0.25,size:0.55,phase:0,
+    desc:'Tavily API로 실시간 트렌드 수집. 디시인사이드, 네이버 카페, 레딧, 트위터까지 커뮤니티 반응을 자동 분석합니다.',
+    tags:['Tavily API','트렌드 수집','커뮤니티 분석','실시간']
+  },
+  {
+    name:'메모리',icon:'🧠',
+    color:0x7c3aed,emissive:0x5b21b6,
+    orbit:9,speed:0.18,size:0.65,phase:1.2,
+    desc:'Supabase에 모든 성과 데이터를 영구 저장. 어떤 주제·훅·포맷이 효과적인지 자동으로 기억하고 진화합니다.',
+    tags:['Supabase','영구 저장','자기학습','A/B 테스트']
+  },
+  {
+    name:'자기학습',icon:'⚡',
+    color:0xeab308,emissive:0xa16207,
+    orbit:12.5,speed:0.13,size:0.6,phase:2.5,
+    desc:'5회마다 성공/실패 패턴을 자동 분석. 높은 점수의 콘텐츠 패턴을 추출해 다음 콘텐츠에 즉시 반영합니다.',
+    tags:['패턴 분석','자동 최적화','스코어링','진화']
+  },
+  {
+    name:'예측엔진',icon:'🎯',
+    color:0x10b981,emissive:0x065f46,
+    orbit:16,speed:0.09,size:0.7,phase:3.8,
+    desc:'다음 주 바이럴 주제 5개 자동 예측. 글로벌 트렌드와 국내 커뮤니티 반응을 종합해 최적 콘텐츠를 제안합니다.',
+    tags:['트렌드 예측','주제 추천','바이럴 분석','캘린더']
+  },
+  {
+    name:'보안',icon:'🛡️',
+    color:0xef4444,emissive:0x991b1b,
+    orbit:20,speed:0.06,size:0.75,phase:5.1,
+    desc:'프롬프트 인젝션 차단, API 키 보호, 접근 제한까지. 시스템 전체를 24시간 자동으로 보호합니다.',
+    tags:['프롬프트 보안','API 보호','인증 시스템','접근 제어']
+  }
+];
+
+// ══════════════════════════════════════
+// Three.js 초기화
+// ══════════════════════════════════════
+const W = window.innerWidth, H = window.innerHeight;
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(W,H);
+renderer.shadowMap.enabled = true;
+document.body.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x000008, 0.012);
+
+const camera = new THREE.PerspectiveCamera(60, W/H, 0.1, 2000);
+camera.position.set(0, 8, 28);
+camera.lookAt(0,0,0);
+
+// ── 조명
+const ambientLight = new THREE.AmbientLight(0x111133, 1.5);
+scene.add(ambientLight);
+const sunLight = new THREE.PointLight(0xffffff, 2.5, 80);
+sunLight.position.set(0,0,0);
+scene.add(sunLight);
+
+// ── 별 파티클 1000개
+const starGeo = new THREE.BufferGeometry();
+const starPos = new Float32Array(3000);
+const starCol = new Float32Array(3000);
+for(let i=0;i<3000;i+=3){
+  const r = 80 + Math.random()*800;
+  const theta = Math.random()*Math.PI*2;
+  const phi = Math.acos(2*Math.random()-1);
+  starPos[i]   = r*Math.sin(phi)*Math.cos(theta);
+  starPos[i+1] = r*Math.sin(phi)*Math.sin(theta);
+  starPos[i+2] = r*Math.cos(phi);
+  const bright = 0.5+Math.random()*0.5;
+  const hue = Math.random();
+  if(hue < 0.7){ starCol[i]=bright; starCol[i+1]=bright; starCol[i+2]=bright; }
+  else if(hue < 0.85){ starCol[i]=bright*0.7; starCol[i+1]=bright*0.8; starCol[i+2]=bright; }
+  else{ starCol[i]=bright; starCol[i+1]=bright*0.8; starCol[i+2]=bright*0.6; }
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+starGeo.setAttribute('color', new THREE.BufferAttribute(starCol,3));
+const starMat = new THREE.PointsMaterial({size:0.6, vertexColors:true, transparent:true, opacity:0.9, sizeAttenuation:true});
+scene.add(new THREE.Points(starGeo, starMat));
+
+// ── 중앙 태양 (AI 코어)
+const sunGeo = new THREE.SphereGeometry(1.8,32,32);
+const sunMat = new THREE.MeshBasicMaterial({color:0xffffff});
+const sun = new THREE.Mesh(sunGeo, sunMat);
+scene.add(sun);
+
+// 태양 글로우
+const glowGeo = new THREE.SphereGeometry(2.2,32,32);
+const glowMat = new THREE.MeshBasicMaterial({color:0x7c3aed, transparent:true, opacity:0.15, side:THREE.BackSide});
+scene.add(new THREE.Mesh(glowGeo, glowMat));
+const glowGeo2 = new THREE.SphereGeometry(2.8,32,32);
+const glowMat2 = new THREE.MeshBasicMaterial({color:0x2563eb, transparent:true, opacity:0.07, side:THREE.BackSide});
+scene.add(new THREE.Mesh(glowGeo2, glowMat2));
+
+// 태양 파티클 (코로나)
+const coronaGeo = new THREE.BufferGeometry();
+const cp = new Float32Array(600);
+for(let i=0;i<600;i+=3){
+  const a=Math.random()*Math.PI*2, b=Math.acos(2*Math.random()-1);
+  const r=1.9+Math.random()*1.2;
+  cp[i]=r*Math.sin(b)*Math.cos(a); cp[i+1]=r*Math.sin(b)*Math.sin(a); cp[i+2]=r*Math.cos(b);
+}
+coronaGeo.setAttribute('position',new THREE.BufferAttribute(cp,3));
+const coronaMat = new THREE.PointsMaterial({size:0.12,color:0xa78bfa,transparent:true,opacity:0.6,sizeAttenuation:true});
+scene.add(new THREE.Points(coronaGeo,coronaMat));
+
+// ── 우주선
+const shipGroup = new THREE.Group();
+// 선체
+const bodyGeo = new THREE.ConeGeometry(0.18, 0.7, 8);
+const bodyMat = new THREE.MeshPhongMaterial({color:0xccddff, emissive:0x112244, shininess:120});
+const body = new THREE.Mesh(bodyGeo, bodyMat);
+body.rotation.x = Math.PI/2;
+shipGroup.add(body);
+// 날개
+const wingGeo = new THREE.BoxGeometry(0.6,0.04,0.22);
+const wingMat = new THREE.MeshPhongMaterial({color:0x8899cc, emissive:0x112244});
+const wings = new THREE.Mesh(wingGeo, wingMat);
+wings.position.z = 0.12;
+shipGroup.add(wings);
+// 엔진 불꽃
+const flameGeo = new THREE.ConeGeometry(0.08,0.25,8);
+const flameMat = new THREE.MeshBasicMaterial({color:0x60a5fa,transparent:true,opacity:0.8});
+const flame = new THREE.Mesh(flameGeo, flameMat);
+flame.position.z = 0.45; flame.rotation.x = -Math.PI/2;
+shipGroup.add(flame);
+
+shipGroup.position.set(0,0,0);
+shipGroup.scale.set(1.8,1.8,1.8);
+scene.add(shipGroup);
+
+// ── 행성 + 궤도 링
+const planetMeshes = [];
+const orbitGroups = [];
+
+PLANETS.forEach((p,i)=>{
+  // 궤도 링
+  const orbitGeo = new THREE.RingGeometry(p.orbit-0.02, p.orbit+0.02, 120);
+  const orbitMat = new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.06,side:THREE.DoubleSide});
+  const orbitMesh = new THREE.Mesh(orbitGeo, orbitMat);
+  orbitMesh.rotation.x = Math.PI/2;
+  scene.add(orbitMesh);
+
+  // 행성 그룹
+  const group = new THREE.Group();
+  group.rotation.y = p.phase;
+  scene.add(group);
+
+  // 행성 구
+  const geo = new THREE.SphereGeometry(p.size, 32, 32);
+  const mat = new THREE.MeshPhongMaterial({
+    color:p.color, emissive:p.emissive, emissiveIntensity:0.4, shininess:60
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(p.orbit, 0, 0);
+  mesh.userData = {planetIndex:i, originalColor:p.color};
+  group.add(mesh);
+
+  // 행성 글로우
+  const gGeo = new THREE.SphereGeometry(p.size*1.4,16,16);
+  const gMat = new THREE.MeshBasicMaterial({color:p.color,transparent:true,opacity:0.12,side:THREE.BackSide});
+  const gMesh = new THREE.Mesh(gGeo,gMat);
+  gMesh.position.copy(mesh.position);
+  group.add(gMesh);
+
+  // 행성 링 (토성 느낌, 일부 행성)
+  if(i===1||i===3){
+    const rGeo = new THREE.TorusGeometry(p.size*1.6, 0.04, 4, 60);
+    const rMat = new THREE.MeshBasicMaterial({color:p.color,transparent:true,opacity:0.3});
+    const rMesh = new THREE.Mesh(rGeo,rMat);
+    rMesh.position.copy(mesh.position);
+    rMesh.rotation.x = Math.PI/4;
+    group.add(rMesh);
+  }
+
+  planetMeshes.push(mesh);
+  orbitGroups.push(group);
+});
+
+// ── 배경 성운 (텍스처 없이 파티클로)
+const nebulaGeo = new THREE.BufferGeometry();
+const np = new Float32Array(3000);
+const nc = new Float32Array(3000);
+const nebulaColors = [[0.3,0.1,0.6],[0.1,0.2,0.5],[0.2,0.05,0.3]];
+for(let i=0;i<3000;i+=3){
+  const r=30+Math.random()*60;
+  const a=Math.random()*Math.PI*2, b=Math.acos(2*Math.random()-1)*0.5+Math.PI/4;
+  np[i]=r*Math.sin(b)*Math.cos(a); np[i+1]=(Math.random()-.5)*15; np[i+2]=r*Math.cos(a);
+  const c=nebulaColors[Math.floor(Math.random()*3)];
+  const br=0.2+Math.random()*0.3;
+  nc[i]=c[0]*br; nc[i+1]=c[1]*br; nc[i+2]=c[2]*br;
+}
+nebulaGeo.setAttribute('position',new THREE.BufferAttribute(np,3));
+nebulaGeo.setAttribute('color',new THREE.BufferAttribute(nc,3));
+const nebulaMat = new THREE.PointsMaterial({size:0.8,vertexColors:true,transparent:true,opacity:0.5,sizeAttenuation:true});
+scene.add(new THREE.Points(nebulaGeo,nebulaMat));
+
+// ══════════════════════════════════════
+// 라벨 DOM
+// ══════════════════════════════════════
+const labels = PLANETS.map((p,i)=>{
+  const div = document.createElement('div');
+  div.className='planet-label';
+  div.innerHTML=`<span class="icon">${p.icon}</span><span class="name">${p.name}</span>`;
+  div.style.animationDelay=`${i*0.6}s`;
+  document.body.appendChild(div);
+  return div;
+});
+
+// ══════════════════════════════════════
+// 카메라 제어
+// ══════════════════════════════════════
+let isDragging=false, prevMouse={x:0,y:0};
+let camTheta=0.3, camPhi=0.3, camRadius=28;
+let targetTheta=camTheta, targetPhi=camPhi, targetRadius=camRadius;
+let targetLook = new THREE.Vector3(0,0,0);
+let currentLook = new THREE.Vector3(0,0,0);
+let warping=false;
+
+function updateCamera(){
+  camTheta += (targetTheta-camTheta)*0.06;
+  camPhi   += (targetPhi-camPhi)*0.06;
+  camRadius+= (targetRadius-camRadius)*0.06;
+  currentLook.lerp(targetLook, 0.05);
+  camera.position.set(
+    camRadius*Math.sin(camTheta)*Math.cos(camPhi),
+    camRadius*Math.sin(camPhi),
+    camRadius*Math.cos(camTheta)*Math.cos(camPhi)
+  );
+  camera.lookAt(currentLook);
+}
+
+renderer.domElement.addEventListener('mousedown',e=>{
+  isDragging=true; prevMouse={x:e.clientX,y:e.clientY};
+});
+renderer.domElement.addEventListener('mousemove',e=>{
+  // 우주선 마우스 추적
+  const nx=(e.clientX/window.innerWidth-0.5)*2;
+  const ny=-(e.clientY/window.innerHeight-0.5)*2;
+  shipGroup.position.x += (nx*3 - shipGroup.position.x)*0.05;
+  shipGroup.position.y += (ny*1.5 - shipGroup.position.y)*0.05;
+  shipGroup.rotation.z = -nx*0.3;
+  shipGroup.rotation.x = ny*0.2;
+
+  if(!isDragging)return;
+  const dx=e.clientX-prevMouse.x, dy=e.clientY-prevMouse.y;
+  targetTheta -= dx*0.005;
+  targetPhi   += dy*0.004;
+  targetPhi = Math.max(-0.5, Math.min(1.2, targetPhi));
+  prevMouse={x:e.clientX,y:e.clientY};
+});
+renderer.domElement.addEventListener('mouseup',()=>isDragging=false);
+renderer.domElement.addEventListener('wheel',e=>{
+  targetRadius += e.deltaY*0.02;
+  targetRadius = Math.max(5, Math.min(60, targetRadius));
+});
+
+// ══════════════════════════════════════
+// 레이캐스팅 (클릭)
+// ══════════════════════════════════════
+const raycaster = new THREE.Raycaster();
+const mouse2d = new THREE.Vector2();
+
+renderer.domElement.addEventListener('click',e=>{
+  if(warping)return;
+  mouse2d.x=(e.clientX/window.innerWidth)*2-1;
+  mouse2d.y=-(e.clientY/window.innerHeight)*2+1;
+  raycaster.setFromCamera(mouse2d, camera);
+  const hits = raycaster.intersectObjects(planetMeshes);
+  if(hits.length>0){
+    const pi = hits[0].object.userData.planetIndex;
+    warpToPlanet(pi);
+  }
+});
+
+// ── 행성 호버
+renderer.domElement.addEventListener('mousemove',e=>{
+  mouse2d.x=(e.clientX/window.innerWidth)*2-1;
+  mouse2d.y=-(e.clientY/window.innerHeight)*2+1;
+  raycaster.setFromCamera(mouse2d, camera);
+  const hits = raycaster.intersectObjects(planetMeshes);
+  renderer.domElement.style.cursor = hits.length>0 ? 'pointer' : 'default';
+  planetMeshes.forEach((m,i)=>{
+    m.material.emissiveIntensity = (hits.length>0 && hits[0].object===m) ? 0.8 : 0.4;
+  });
+});
+
+// ══════════════════════════════════════
+// 워프 + 팝업
+// ══════════════════════════════════════
+const warpEl = document.getElementById('warp');
+
+function warpToPlanet(idx){
+  warping=true;
+  warpEl.style.opacity='1';
+  setTimeout(()=>{
+    const p = PLANETS[idx];
+    const mesh = planetMeshes[idx];
+    const worldPos = new THREE.Vector3();
+    mesh.getWorldPosition(worldPos);
+    targetLook.copy(worldPos);
+    const dir = worldPos.clone().normalize();
+    targetRadius = p.orbit + p.size + 3.5;
+    targetTheta = Math.atan2(dir.x, dir.z);
+    targetPhi = 0.15;
+    setTimeout(()=>{
+      warpEl.style.opacity='0';
+      showPopup(idx);
+      warping=false;
+    },400);
+  },300);
+}
+
+function showPopup(idx){
+  const p=PLANETS[idx];
+  document.getElementById('popup-icon').textContent=p.icon;
+  document.getElementById('popup-title').textContent=p.name+' 모듈';
+  document.getElementById('popup-desc').textContent=p.desc;
+  const tagsEl=document.getElementById('popup-tags');
+  tagsEl.innerHTML=p.tags.map(t=>`<span>${t}</span>`).join('');
+  document.getElementById('popup').classList.add('show');
+}
+
+function closePopup(){
+  document.getElementById('popup').classList.remove('show');
+  targetRadius=28; targetPhi=0.3; targetLook.set(0,0,0);
+}
+
+// ══════════════════════════════════════
+// 라벨 위치 업데이트
+// ══════════════════════════════════════
+function updateLabels(){
+  planetMeshes.forEach((mesh,i)=>{
+    const wp = new THREE.Vector3();
+    mesh.getWorldPosition(wp);
+    wp.project(camera);
+    const x=(wp.x+1)/2*window.innerWidth;
+    const y=(-wp.y+1)/2*window.innerHeight;
+    if(wp.z>1){ labels[i].style.display='none'; return; }
+    labels[i].style.display='block';
+    labels[i].style.left=x+'px';
+    labels[i].style.top=(y-PLANETS[i].size*30-36)+'px';
+  });
+}
+
+// ══════════════════════════════════════
+// 리사이즈
+// ══════════════════════════════════════
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+// ══════════════════════════════════════
+// 애니메이션 루프
+// ══════════════════════════════════════
+const clock = new THREE.Clock();
+let frameCount=0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const t=clock.getElapsedTime();
+  frameCount++;
+
+  // 행성 공전
+  PLANETS.forEach((p,i)=>{
+    orbitGroups[i].rotation.y = p.phase + t*p.speed;
+    planetMeshes[i].rotation.y = t*0.5;
+  });
+
+  // 태양 펄스
+  const pulse = 1 + Math.sin(t*1.5)*0.04;
+  sun.scale.set(pulse,pulse,pulse);
+  sunLight.intensity = 2.3 + Math.sin(t*2)*0.2;
+
+  // 코로나 회전
+  scene.children.forEach(c=>{ if(c.isPoints && c.geometry.attributes.position.count===200) c.rotation.y=t*0.3; });
+
+  // 우주선 흔들림
+  shipGroup.position.z = Math.sin(t*0.7)*0.2;
+  flame.material.opacity = 0.6+Math.sin(t*8)*0.2;
+  flame.scale.y = 0.8+Math.sin(t*12)*0.2;
+
+  // 별 반짝임
+  if(frameCount%3===0) starMat.opacity = 0.85+Math.sin(t*0.5)*0.08;
+
+  updateCamera();
+  updateLabels();
+  renderer.render(scene,camera);
+}
+animate();
+</script>
+</body>
+</html>
