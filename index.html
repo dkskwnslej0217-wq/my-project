@@ -3,27 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI 자동화 시스템</title>
+  <title>AI System — Universe</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      background: #0a0a0f;
+      background: #000010;
       color: #fff;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Segoe UI', sans-serif;
       height: 100vh;
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
+    }
+    canvas {
+      position: fixed;
+      top: 0; left: 0;
+      z-index: 0;
+    }
+    .center {
+      position: relative;
+      z-index: 10;
       text-align: center;
     }
-    h1 { font-size: 3rem; margin-bottom: 1rem; }
-    p { color: #888; font-size: 1.2rem; }
+    h1 {
+      font-size: 3rem;
+      background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+    p {
+      color: #94a3b8;
+      font-size: 1.1rem;
+      margin-bottom: 2rem;
+    }
+    .btn {
+      padding: 0.75rem 2rem;
+      background: linear-gradient(135deg, #7c3aed, #2563eb);
+      border: none;
+      border-radius: 9999px;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px #7c3aed88;
+    }
+    .status {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #4ade80;
+    }
   </style>
 </head>
 <body>
-  <div>
-    <h1>🚀 AI 자동화 시스템</h1>
-    <p>스스로 진화하는 AI — 준비 중</p>
+  <canvas id="stars"></canvas>
+  <div class="center">
+    <h1>🚀 AI Universe</h1>
+    <p>스스로 조사하고, 기억하고, 학습하는 AI 시스템</p>
+    <a class="btn" href="#">시작하기</a>
+    <div class="status">⚡ 시스템 가동 중 — 2026</div>
   </div>
+
+  <script>
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const stars = Array.from({length: 200}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.5 + 0.3,
+      speed: Math.random() * 0.3 + 0.05,
+      opacity: Math.random()
+    }));
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      stars.forEach(s => {
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
+        ctx.fill();
+        s.opacity += (Math.random() - 0.5) * 0.02;
+        s.opacity = Math.max(0.1, Math.min(1, s.opacity));
+      });
+      requestAnimationFrame(draw);
+    }
+    draw();
+
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
 </body>
 </html>
