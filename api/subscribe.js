@@ -27,6 +27,7 @@ export default async function handler(req) {
     });
   }
 
+  // Supabase 직접 저장
   const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/subscribers`, {
     method: 'POST',
     headers: {
@@ -48,6 +49,21 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: '저장 중 오류가 발생했습니다. 다시 시도해주세요.' }), {
       status: 500, headers: { 'Content-Type': 'application/json' }
     });
+  }
+
+  // Make.com으로도 전달 → 구글시트 동기화 (실패해도 무시)
+  if (process.env.MAKE_SHEETS_WEBHOOK) {
+    fetch(process.env.MAKE_SHEETS_WEBHOOK, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'subscriber',
+        timestamp: new Date().toISOString(),
+        email, name: name || '',
+        plan: 'free',
+        source: 'nova-universe-landing',
+      }),
+    }).catch(() => {});
   }
 
   return new Response(JSON.stringify({ ok: true }), {
