@@ -1,106 +1,350 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI System — Universe</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      background: #000010;
-      color: #fff;
-      font-family: 'Segoe UI', sans-serif;
-      height: 100vh;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    canvas {
-      position: fixed;
-      top: 0; left: 0;
-      z-index: 0;
-    }
-    .center {
-      position: relative;
-      z-index: 10;
-      text-align: center;
-    }
-    h1 {
-      font-size: 3rem;
-      background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 1rem;
-    }
-    p {
-      color: #94a3b8;
-      font-size: 1.1rem;
-      margin-bottom: 2rem;
-    }
-    .btn {
-      padding: 0.75rem 2rem;
-      background: linear-gradient(135deg, #7c3aed, #2563eb);
-      border: none;
-      border-radius: 9999px;
-      color: #fff;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
-      text-decoration: none;
-    }
-    .btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px #7c3aed88;
-    }
-    .status {
-      margin-top: 2rem;
-      font-size: 0.85rem;
-      color: #4ade80;
-    }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NOVA UNIVERSE</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#02000a;overflow:hidden;font-family:'Orbitron',sans-serif}
+canvas{display:block;position:fixed;top:0;left:0;z-index:1}
+
+/* ── 로딩 화면 ── */
+#loader{
+  position:fixed;inset:0;z-index:200;background:#02000a;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;transition:opacity .9s ease;
+}
+#loader-title{
+  font-size:clamp(1.8rem,5vw,4rem);font-weight:900;letter-spacing:.25em;color:#fff;
+  text-shadow:0 0 40px #7c3aed,0 0 80px #4f46e5;margin-bottom:4px;
+}
+#loader-sub{
+  font-size:clamp(.45rem,.7vw,.65rem);letter-spacing:.5em;color:rgba(167,139,250,.5);
+  margin-bottom:20px;
+}
+#loader-lines{
+  font-size:clamp(.45rem,.65vw,.62rem);letter-spacing:.18em;color:#a78bfa;
+  text-align:left;width:clamp(260px,40vw,380px);min-height:96px;line-height:2;
+}
+#loader-lines div{opacity:0;transition:opacity .35s ease;}
+#loader-bar-wrap{
+  width:clamp(260px,40vw,380px);height:1px;
+  background:rgba(167,139,250,.12);border-radius:2px;margin-top:10px;
+}
+#loader-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#4f46e5,#a78bfa,#e879f9);
+  border-radius:2px;transition:width .4s ease;
+  box-shadow:0 0 8px #7c3aed;
+}
+
+/* ── 메인 UI ── */
+#ui{
+  position:fixed;top:0;left:0;right:0;bottom:0;z-index:10;
+  pointer-events:none;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:8px;
+}
+#title{
+  font-size:clamp(1.6rem,4.5vw,3.5rem);font-weight:900;
+  letter-spacing:.2em;color:#fff;
+  animation:glow 3s ease-in-out infinite alternate;
+}
+@keyframes glow{
+  from{text-shadow:0 0 20px #7c3aed,0 0 40px #4f46e5,0 0 60px #7c3aed}
+  to{text-shadow:0 0 40px #a78bfa,0 0 80px #7c3aed,0 0 120px #4f46e5}
+}
+#subtitle{font-size:clamp(.55rem,1vw,.85rem);letter-spacing:.4em;color:rgba(167,139,250,.6);}
+#hint{
+  margin-top:clamp(8px,1.5vw,16px);
+  font-size:clamp(.45rem,.7vw,.65rem);
+  letter-spacing:.2em;color:rgba(255,255,255,.2);
+}
+.planet-label{
+  position:fixed;pointer-events:all;z-index:5;
+  transform:translate(-50%,-50%);text-align:center;cursor:pointer;
+}
+.planet-label .name{
+  font-size:clamp(.5rem,.7vw,.68rem);font-weight:700;
+  letter-spacing:.15em;text-transform:uppercase;
+  text-shadow:0 0 10px currentColor;display:block;
+  font-family:'Orbitron',sans-serif;
+}
+.planet-label .tag{
+  font-size:clamp(.35rem,.5vw,.48rem);
+  color:rgba(255,255,255,.3);letter-spacing:.1em;
+  font-family:'Orbitron',sans-serif;margin-top:2px;display:block;
+}
+/* 툴팁 */
+#tooltip{
+  position:fixed;z-index:50;pointer-events:none;
+  background:rgba(10,5,30,0.95);
+  border:1px solid rgba(167,139,250,0.3);
+  border-radius:10px;padding:.7rem 1rem;
+  font-family:'Orbitron',sans-serif;
+  max-width:220px;display:none;
+}
+#tooltip-name{font-size:.65rem;font-weight:700;color:#fff;letter-spacing:.1em;margin-bottom:.3rem;}
+#tooltip-desc{font-size:.55rem;color:rgba(167,139,250,.7);line-height:1.7;letter-spacing:.05em;}
+/* 워프 */
+#warp{position:fixed;inset:0;z-index:100;pointer-events:none;
+  background:radial-gradient(ellipse at center,#7c3aed 0%,#000 70%);
+  opacity:0;transition:opacity .25s;}
+</style>
 </head>
 <body>
-  <canvas id="stars"></canvas>
-  <div class="center">
-    <h1>🚀 AI Universe</h1>
-    <p>스스로 조사하고, 기억하고, 학습하는 AI 시스템</p>
-    <a class="btn" href="#">시작하기</a>
-    <div class="status">⚡ 시스템 가동 중 — 2026</div>
-  </div>
 
-  <script>
-    const canvas = document.getElementById('stars');
-    const ctx = canvas.getContext('2d');
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+<!-- 로딩 화면 -->
+<div id="loader">
+  <div id="loader-title">NOVA UNIVERSE</div>
+  <div id="loader-sub">AI BUSINESS AUTOMATION</div>
+  <div id="loader-lines"></div>
+  <div id="loader-bar-wrap"><div id="loader-bar"></div></div>
+</div>
 
-    const stars = Array.from({length: 200}, () => ({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.5 + 0.3,
-      speed: Math.random() * 0.3 + 0.05,
-      opacity: Math.random()
-    }));
+<div id="warp"></div>
+<div id="ui">
+  <div id="title">NOVA UNIVERSE</div>
+  <div id="subtitle">AI BUSINESS AUTOMATION</div>
+  <div id="hint">행성을 클릭해서 모듈로 진입하세요</div>
+</div>
+<div id="tooltip"><div id="tooltip-name"></div><div id="tooltip-desc"></div></div>
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      stars.forEach(s => {
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
-        ctx.fill();
-        s.opacity += (Math.random() - 0.5) * 0.02;
-        s.opacity = Math.max(0.1, Math.min(1, s.opacity));
-      });
-      requestAnimationFrame(draw);
+<script>
+// ══════════════════════════════════════
+// 로딩 화면 애니메이션
+// ══════════════════════════════════════
+(function(){
+  const lines=[
+    '> NOVA UNIVERSE v2.0 초기화 중...',
+    '> AI 엔진 연결 중... [CLAUDE / GROQ / GEMINI]',
+    '> 모듈 로드 중... [CONTENT / TAX / LAW / BOT]',
+    '> 우주 공간 렌더링...',
+    '> 시스템 준비 완료  ██████████  100%',
+  ];
+  const linesEl=document.getElementById('loader-lines');
+  const barEl=document.getElementById('loader-bar');
+  const loader=document.getElementById('loader');
+  let idx=0;
+  function next(){
+    if(idx>=lines.length){
+      setTimeout(()=>{loader.style.opacity='0';setTimeout(()=>loader.style.display='none',900);},500);
+      return;
     }
-    draw();
+    const d=document.createElement('div');
+    d.textContent=lines[idx];
+    linesEl.appendChild(d);
+    requestAnimationFrame(()=>d.style.opacity='1');
+    idx++;
+    barEl.style.width=(idx/lines.length*100)+'%';
+    setTimeout(next, idx===lines.length ? 700 : 480);
+  }
+  setTimeout(next,400);
+})();
 
-    window.addEventListener('resize', () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    });
-  </script>
+// ══════════════════════════════════════
+// 모듈 데이터 — 여기에 한 줄씩 추가
+// ══════════════════════════════════════
+const MODULES = [
+  {name:'CONTENT',  tag:'콘텐츠 자동화',   color:0xa78bfa, emissive:0x5b21b6, orbitA:10, orbitB:6,  speed:0.28, phase:0,   size:0.65, url:'output/universe/index.html', desc:'AI 콘텐츠 자동 생성\nThreads·Instagram·YouTube 동시 발행'},
+  {name:'TAX',      tag:'AI 세무사',        color:0xfbbf24, emissive:0x92400e, orbitA:14, orbitB:9,  speed:0.20, phase:1.1, size:0.58, url:null, desc:'경비처리·부가세·종소세\n자동 계산 및 신고 보조'},
+  {name:'LAW',      tag:'AI 변호사',        color:0xf87171, emissive:0xb91c1c, orbitA:18, orbitB:11, speed:0.15, phase:2.2, size:0.60, url:null, desc:'계약서 검토·내용증명\n분쟁 대응 자동화'},
+  {name:'REPLY',    tag:'AI 댓글 답변',     color:0x34d399, emissive:0x065f46, orbitA:13, orbitB:8,  speed:0.23, phase:3.3, size:0.55, url:null, desc:'리뷰·댓글 자동 답변\n브랜드 톤 유지'},
+  {name:'BOOK',     tag:'AI 예약관리',      color:0x60a5fa, emissive:0x1d4ed8, orbitA:17, orbitB:10, speed:0.17, phase:4.4, size:0.57, url:null, desc:'예약·스케줄 자동 관리\n알림 자동 발송'},
+  {name:'INVOICE',  tag:'AI 견적·계약',     color:0xe879f9, emissive:0x86198f, orbitA:21, orbitB:13, speed:0.12, phase:5.5, size:0.62, url:null, desc:'견적서·계약서 자동 생성\n서명·발송 자동화'},
+  {name:'HR',       tag:'AI 채용',          color:0xfb923c, emissive:0x9a3412, orbitA:15, orbitB:9,  speed:0.19, phase:0.8, size:0.56, url:null, desc:'채용공고·면접 질문 생성\n지원자 자동 분류'},
+  {name:'TRANSLATE',tag:'AI 번역',          color:0x818cf8, emissive:0x3730a3, orbitA:20, orbitB:12, speed:0.13, phase:2.0, size:0.59, url:null, desc:'다국어 번역·현지화\n브랜드 톤 유지'},
+  {name:'DESIGN',   tag:'AI 디자인',        color:0xf472b6, emissive:0xbe185d, orbitA:23, orbitB:14, speed:0.10, phase:3.5, size:0.63, url:null, desc:'썸네일·카드뉴스 자동 생성\nAI 이미지 프롬프트 최적화'},
+  {name:'BOT',      tag:'AI 챗봇',          color:0x2dd4bf, emissive:0x0f766e, orbitA:16, orbitB:10, speed:0.16, phase:5.0, size:0.60, url:null, desc:'AI 챗봇 자동 제작\n24시간 고객 응대 자동화'},
+];
+
+// ══════════════════════════════════════
+// Three.js 초기화
+// ══════════════════════════════════════
+const W=window.innerWidth, H=window.innerHeight;
+const renderer=new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(W,H);
+renderer.setClearColor(0x02000a,1);
+document.body.appendChild(renderer.domElement);
+
+const scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x000000,0.007);
+
+const camera=new THREE.PerspectiveCamera(60,W/H,0.1,2000);
+camera.position.set(0,12,38);
+camera.lookAt(0,0,0);
+
+scene.add(new THREE.AmbientLight(0x110022,2));
+const coreLight=new THREE.PointLight(0x7c3aed,3,120);
+scene.add(coreLight);
+
+// 배경 별 (6000개 → 더 촘촘한 우주)
+const sGeo=new THREE.BufferGeometry();
+const STAR_COUNT=6000;
+const sPos=new Float32Array(STAR_COUNT*3),sCol=new Float32Array(STAR_COUNT*3);
+for(let i=0;i<STAR_COUNT*3;i+=3){
+  const r=100+Math.random()*900,a=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1);
+  sPos[i]=r*Math.sin(p)*Math.cos(a);sPos[i+1]=r*Math.sin(p)*Math.sin(a);sPos[i+2]=r*Math.cos(p);
+  const b=0.4+Math.random()*0.6,h=Math.random();
+  if(h<0.65){sCol[i]=b;sCol[i+1]=b;sCol[i+2]=b;}
+  else if(h<0.82){sCol[i]=b*.6;sCol[i+1]=b*.7;sCol[i+2]=b;}
+  else{sCol[i]=b;sCol[i+1]=b*.7;sCol[i+2]=b*.9;}
+}
+sGeo.setAttribute('position',new THREE.BufferAttribute(sPos,3));
+sGeo.setAttribute('color',new THREE.BufferAttribute(sCol,3));
+const starMat=new THREE.PointsMaterial({size:1.2,vertexColors:true,transparent:true,opacity:0.9,sizeAttenuation:true});
+scene.add(new THREE.Points(sGeo,starMat));
+
+// 서비스 도트 (가까운 거리 25개 — 규모감 추가)
+const dotColors=[0xa78bfa,0xfbbf24,0xf87171,0x34d399,0x60a5fa,0xe879f9,0xfb923c,0x818cf8,0xf472b6,0x2dd4bf];
+const dGeo=new THREE.BufferGeometry();
+const dPos=new Float32Array(25*3),dCol=new Float32Array(25*3);
+for(let i=0;i<25;i++){
+  const r=28+Math.random()*40,a=Math.random()*Math.PI*2,p=Math.acos(2*Math.random()-1);
+  dPos[i*3]=r*Math.sin(p)*Math.cos(a);
+  dPos[i*3+1]=(Math.random()-.5)*18;
+  dPos[i*3+2]=r*Math.sin(p)*Math.sin(a);
+  const c=new THREE.Color(dotColors[i%dotColors.length]);
+  dCol[i*3]=c.r*0.9;dCol[i*3+1]=c.g*0.9;dCol[i*3+2]=c.b*0.9;
+}
+dGeo.setAttribute('position',new THREE.BufferAttribute(dPos,3));
+dGeo.setAttribute('color',new THREE.BufferAttribute(dCol,3));
+scene.add(new THREE.Points(dGeo,new THREE.PointsMaterial({size:2.2,vertexColors:true,transparent:true,opacity:0.65,sizeAttenuation:true})));
+
+// 블랙홀
+const bh=new THREE.Mesh(new THREE.SphereGeometry(1.8,32,32),new THREE.MeshBasicMaterial({color:0x000000}));
+scene.add(bh);
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(2.5,32,32),new THREE.MeshBasicMaterial({color:0x4f46e5,transparent:true,opacity:0.12,side:THREE.BackSide})));
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(3.5,32,32),new THREE.MeshBasicMaterial({color:0x7c3aed,transparent:true,opacity:0.06,side:THREE.BackSide})));
+const disk1=new THREE.Mesh(new THREE.TorusGeometry(4,0.35,16,120),new THREE.MeshBasicMaterial({color:0x7c3aed,transparent:true,opacity:0.5}));
+disk1.rotation.x=Math.PI/2.5;scene.add(disk1);
+const disk2=new THREE.Mesh(new THREE.TorusGeometry(5.5,0.18,12,120),new THREE.MeshBasicMaterial({color:0x4f46e5,transparent:true,opacity:0.35}));
+disk2.rotation.x=Math.PI/2.2;disk2.rotation.z=0.3;scene.add(disk2);
+
+// 네불라
+const nGeo=new THREE.BufferGeometry();
+const nPos=new Float32Array(6000),nCol=new Float32Array(6000);
+const nC=[[0.35,0.1,0.65],[0.12,0.15,0.55],[0.25,0.05,0.45]];
+for(let i=0;i<6000;i+=3){
+  const r=40+Math.random()*80,a=Math.random()*Math.PI*2,b=(Math.random()-.5)*0.6;
+  nPos[i]=r*Math.cos(a);nPos[i+1]=r*b*10;nPos[i+2]=r*Math.sin(a);
+  const c=nC[Math.floor(Math.random()*3)],br=0.15+Math.random()*0.35;
+  nCol[i]=c[0]*br;nCol[i+1]=c[1]*br;nCol[i+2]=c[2]*br;
+}
+nGeo.setAttribute('position',new THREE.BufferAttribute(nPos,3));
+nGeo.setAttribute('color',new THREE.BufferAttribute(nCol,3));
+scene.add(new THREE.Points(nGeo,new THREE.PointsMaterial({size:1.0,vertexColors:true,transparent:true,opacity:0.4,sizeAttenuation:true})));
+
+// 행성
+const planetMeshes=[],planetAngles=[];
+MODULES.forEach((m,i)=>{
+  const curve=new THREE.EllipseCurve(0,0,m.orbitA,m.orbitB,0,Math.PI*2,false,0);
+  const pts=curve.getPoints(120);
+  const oGeo=new THREE.BufferGeometry().setFromPoints(pts.map(pt=>new THREE.Vector3(pt.x,0,pt.y)));
+  scene.add(new THREE.Line(oGeo,new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.04})));
+  const mesh=new THREE.Mesh(
+    new THREE.SphereGeometry(m.size,32,32),
+    new THREE.MeshPhongMaterial({color:m.color,emissive:m.emissive,emissiveIntensity:0.5,shininess:80})
+  );
+  scene.add(mesh);
+  const glow=new THREE.Mesh(
+    new THREE.SphereGeometry(m.size*1.5,16,16),
+    new THREE.MeshBasicMaterial({color:m.color,transparent:true,opacity:0.1,side:THREE.BackSide})
+  );
+  scene.add(glow);
+  mesh.userData.glow=glow;
+  mesh.userData.module=m;
+  planetMeshes.push(mesh);
+  planetAngles.push(m.phase);
+});
+
+// 라벨
+const labels=MODULES.map((m,i)=>{
+  const div=document.createElement('div');
+  div.className='planet-label';
+  div.innerHTML=`<span class="name" style="color:#${m.color.toString(16).padStart(6,'0')}">${m.name}</span><span class="tag">${m.tag}</span>`;
+  document.body.appendChild(div);
+  return div;
+});
+
+// 카메라 패럴랙스
+let camTX=0,camTY=12,camBX=0,camBY=12;
+document.addEventListener('mousemove',e=>{
+  camTX=(e.clientX/window.innerWidth-.5)*5;
+  camTY=12+(-(e.clientY/window.innerHeight-.5))*2;
+});
+
+// 툴팁
+const tooltip=document.getElementById('tooltip');
+document.addEventListener('click',e=>{
+  const el=e.target.closest('.planet-label');
+  if(!el)return;
+  e.stopPropagation();
+  const idx=labels.indexOf(el);
+  if(idx<0)return;
+  const m=MODULES[idx];
+  if(m.url){
+    const warp=document.getElementById('warp');
+    warp.style.opacity='1';
+    setTimeout(()=>window.location.href=m.url,400);
+  } else {
+    document.getElementById('tooltip-name').textContent=m.name+' — '+m.tag;
+    document.getElementById('tooltip-desc').textContent=m.desc;
+    tooltip.style.display='block';
+    tooltip.style.left=(e.clientX+16)+'px';
+    tooltip.style.top=(e.clientY-10)+'px';
+  }
+});
+document.addEventListener('mousemove',e=>{
+  const el=e.target.closest('.planet-label');
+  if(!el){tooltip.style.display='none';return;}
+});
+
+// 라벨 업데이트
+function updateLabels(){
+  planetMeshes.forEach((mesh,i)=>{
+    const wp=new THREE.Vector3();
+    mesh.getWorldPosition(wp);wp.project(camera);
+    if(wp.z>1){labels[i].style.display='none';return;}
+    labels[i].style.display='block';
+    labels[i].style.left=((wp.x+1)/2*window.innerWidth)+'px';
+    labels[i].style.top=((-wp.y+1)/2*window.innerHeight+MODULES[i].size*28+14)+'px';
+  });
+}
+
+window.addEventListener('resize',()=>{
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+const clock=new THREE.Clock();
+function animate(){
+  requestAnimationFrame(animate);
+  const t=clock.getElapsedTime();
+  MODULES.forEach((m,i)=>{
+    planetAngles[i]+=m.speed*0.01;
+    const x=m.orbitA*Math.cos(planetAngles[i]);
+    const z=m.orbitB*Math.sin(planetAngles[i]);
+    planetMeshes[i].position.set(x,0,z);
+    planetMeshes[i].userData.glow.position.set(x,0,z);
+    planetMeshes[i].rotation.y=t*0.4;
+  });
+  disk1.rotation.z=t*0.6;disk2.rotation.z=-t*0.4;
+  const pulse=1+Math.sin(t*1.5)*0.05;
+  bh.scale.set(pulse,pulse,pulse);
+  coreLight.intensity=2.5+Math.sin(t*2)*0.5;
+  starMat.opacity=0.85+Math.sin(t*0.4)*0.08;
+  camBX+=(camTX-camBX)*0.04;camBY+=(camTY-camBY)*0.04;
+  camera.position.x=camBX;camera.position.y=camBY;
+  camera.lookAt(0,0,0);
+  updateLabels();
+  renderer.render(scene,camera);
+}
+animate();
+</script>
 </body>
 </html>
