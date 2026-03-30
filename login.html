@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>NOVA UNIVERSE — 로그인</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;background:#000005;font-family:'Orbitron',sans-serif;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;}
+
+/* 별 배경 */
+#bg{position:fixed;inset:0;z-index:0;}
+
+/* 카드 */
+#card{
+  position:relative;z-index:10;
+  width:min(90vw,380px);
+  background:rgba(4,0,18,0.92);
+  border:1px solid rgba(139,92,246,0.2);
+  border-radius:18px;padding:2.4rem 2rem;
+  box-shadow:0 0 60px rgba(109,40,217,0.12);
+}
+#card-logo{font-size:.65rem;font-weight:900;letter-spacing:.3em;color:rgba(255,255,255,.5);
+  margin-bottom:.3rem;}
+#card-title{font-size:1.1rem;font-weight:900;letter-spacing:.15em;color:#fff;margin-bottom:.3rem;
+  text-shadow:0 0 20px #7c3aed;}
+#card-sub{font-size:.38rem;letter-spacing:.25em;color:rgba(139,92,246,.4);margin-bottom:1.8rem;}
+
+/* 탭 */
+.tabs{display:flex;gap:.5rem;margin-bottom:1.4rem;}
+.tab{flex:1;padding:.5rem;border-radius:8px;font-family:'Orbitron',sans-serif;
+  font-size:.44rem;letter-spacing:.15em;cursor:pointer;border:1px solid rgba(139,92,246,.15);
+  background:transparent;color:rgba(139,92,246,.4);transition:.2s;}
+.tab.active{background:rgba(109,40,217,.25);color:#c4b5fd;border-color:rgba(139,92,246,.4);}
+
+/* 입력 */
+.field{margin-bottom:.9rem;}
+.field label{display:block;font-size:.38rem;letter-spacing:.2em;color:rgba(139,92,246,.5);margin-bottom:.4rem;}
+.field input{
+  width:100%;background:rgba(255,255,255,.03);
+  border:1px solid rgba(139,92,246,.15);border-radius:8px;
+  color:#fff;font-family:'Orbitron',sans-serif;font-size:.52rem;
+  letter-spacing:.08em;padding:.65rem .8rem;outline:none;
+  transition:border-color .2s;
+}
+.field input:focus{border-color:rgba(139,92,246,.5);}
+.field input::placeholder{color:rgba(255,255,255,.12);}
+
+/* 버튼 */
+#submit-btn{
+  width:100%;padding:.7rem;border-radius:10px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#4338ca,#7c3aed);
+  color:#fff;font-family:'Orbitron',sans-serif;
+  font-size:.5rem;letter-spacing:.2em;
+  margin-top:.4rem;transition:opacity .2s;
+  box-shadow:0 0 20px rgba(109,40,217,.3);
+}
+#submit-btn:hover{opacity:.85;}
+#submit-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+/* 메시지 */
+#msg{font-size:.42rem;letter-spacing:.1em;text-align:center;margin-top:.9rem;min-height:1.2rem;}
+.msg-err{color:#f87171;}
+.msg-ok{color:#34d399;}
+
+/* 돌아가기 */
+#back{display:block;text-align:center;margin-top:1.2rem;
+  font-size:.36rem;letter-spacing:.2em;color:rgba(139,92,246,.3);
+  text-decoration:none;transition:color .2s;}
+#back:hover{color:rgba(139,92,246,.7);}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div id="card">
+  <div id="card-logo">NOVA UNIVERSE</div>
+  <div id="card-title">내 별을 만드세요</div>
+  <div id="card-sub">AI BUSINESS AUTOMATION</div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-signup" onclick="switchTab('signup')">회원가입</button>
+    <button class="tab" id="tab-login" onclick="switchTab('login')">로그인</button>
+  </div>
+
+  <div id="form-signup">
+    <div class="field"><label>이메일</label><input id="s-email" type="email" placeholder="your@email.com"/></div>
+    <div class="field"><label>닉네임 (별 이름)</label><input id="s-nick" type="text" placeholder="JUNHO" maxlength="16"/></div>
+    <div class="field"><label>비밀번호</label><input id="s-pw" type="password" placeholder="8자 이상"/></div>
+  </div>
+
+  <div id="form-login" style="display:none">
+    <div class="field"><label>이메일</label><input id="l-email" type="email" placeholder="your@email.com"/></div>
+    <div class="field"><label>비밀번호</label><input id="l-pw" type="password" placeholder="비밀번호"/></div>
+  </div>
+
+  <button id="submit-btn" onclick="submit()">우주로 진입하기</button>
+  <div id="msg"></div>
+  <a href="/" id="back">← 우주로 돌아가기</a>
+</div>
+
+<script>
+// ─── 별 배경 (간단) ──────────────────────────────────
+(function(){
+  const canvas=document.getElementById('bg');
+  const ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  const stars=Array.from({length:800},()=>({
+    x:Math.random()*canvas.width,y:Math.random()*canvas.height,
+    r:Math.random()*1.2,a:Math.random()
+  }));
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    stars.forEach(s=>{
+      s.a+=0.003*(Math.random()>.5?1:-1);
+      s.a=Math.max(0.05,Math.min(0.9,s.a));
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(180,160,255,${s.a})`;ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ─── 탭 전환 ─────────────────────────────────────────
+let mode='signup';
+function switchTab(t){
+  mode=t;
+  document.getElementById('form-signup').style.display=t==='signup'?'block':'none';
+  document.getElementById('form-login').style.display=t==='login'?'block':'none';
+  document.getElementById('tab-signup').className='tab'+(t==='signup'?' active':'');
+  document.getElementById('tab-login').className='tab'+(t==='login'?' active':'');
+  document.getElementById('submit-btn').textContent=t==='signup'?'우주로 진입하기':'로그인';
+  document.getElementById('msg').textContent='';
+}
+
+function msg(text,ok){
+  const el=document.getElementById('msg');
+  el.textContent=text;el.className=ok?'msg-ok':'msg-err';
+}
+
+// ─── ref 파라미터 저장 ────────────────────────────────
+const ref=new URLSearchParams(location.search).get('ref')||'';
+
+// ─── 제출 ─────────────────────────────────────────────
+async function submit(){
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true;
+  try{
+    if(mode==='signup'){
+      const email=document.getElementById('s-email').value.trim();
+      const nick=document.getElementById('s-nick').value.trim().toUpperCase();
+      const pw=document.getElementById('s-pw').value;
+      if(!email||!nick||!pw){msg('모든 항목을 입력해주세요.');return;}
+      if(pw.length<8){msg('비밀번호는 8자 이상이어야 합니다.');return;}
+      const res=await fetch('/api/signup',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email,nickname:nick,password:pw,referrer_id:ref})});
+      const data=await res.json();
+      if(!res.ok){msg(data.error||'오류가 발생했습니다.');return;}
+      msg('별이 생성됐습니다! 우주로 이동 중...','ok');
+      localStorage.setItem('nova_user',JSON.stringify(data.user));
+      setTimeout(()=>location.href='/?star='+data.user.user_id,1200);
+    } else {
+      const email=document.getElementById('l-email').value.trim();
+      const pw=document.getElementById('l-pw').value;
+      if(!email||!pw){msg('이메일과 비밀번호를 입력해주세요.');return;}
+      const res=await fetch('/api/login',{method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({email,password:pw})});
+      const data=await res.json();
+      if(!res.ok){msg(data.error||'로그인 실패');return;}
+      msg('로그인 완료!','ok');
+      localStorage.setItem('nova_user',JSON.stringify(data.user));
+      setTimeout(()=>location.href='/?star='+data.user.user_id,800);
+    }
+  } finally {btn.disabled=false;}
+}
+
+// 엔터키
+document.addEventListener('keydown',e=>{if(e.key==='Enter')submit();});
+</script>
+</body>
+</html>
