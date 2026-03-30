@@ -91,10 +91,13 @@ export default async function handler(req) {
       method: 'POST', headers,
       body: JSON.stringify({ referrer_id, referred_id: user_id, converted: false })
     });
-    // 초대한 사람 invite_count +1
+    // 초대한 사람 invite_count +1 (현재값 조회 후 +1)
+    const refRes = await fetch(`${SUPA_URL}/rest/v1/users?user_id=eq.${referrer_id}&select=invite_count`, { headers });
+    const refData = await refRes.json();
+    const currentCount = refData[0]?.invite_count || 0;
     await fetch(`${SUPA_URL}/rest/v1/users?user_id=eq.${referrer_id}`, {
       method: 'PATCH', headers,
-      body: JSON.stringify({ invite_count: 'invite_count + 1' })
+      body: JSON.stringify({ invite_count: currentCount + 1 })
     });
   }
 
