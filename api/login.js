@@ -31,6 +31,18 @@ export default async function handler(req) {
 
   const user = users[0];
 
+  // 별 성장 로직: invite_count → star_size 자동 갱신
+  const ic = user.invite_count || 0;
+  const newSize = ic >= 30 ? 3.0 : ic >= 10 ? 2.0 : ic >= 3 ? 1.5 : 1.0;
+  if (newSize !== user.star_size) {
+    await fetch(`${SUPA_URL}/rest/v1/users?user_id=eq.${user.user_id}`, {
+      method: 'PATCH',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ star_size: newSize })
+    });
+    user.star_size = newSize;
+  }
+
   return new Response(JSON.stringify({ user }), {
     status: 200, headers: { 'Content-Type': 'application/json' }
   });
