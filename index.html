@@ -44,6 +44,19 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   pointer-events:none;opacity:0;transition:opacity 1s ease;
 }
 
+/* NOVA 센터 라벨 */
+#nova-label{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  z-index:15;text-align:center;pointer-events:all;cursor:pointer;
+  opacity:0;transition:opacity 1s ease;
+}
+#nova-name{font-size:clamp(.9rem,1.8vw,1.5rem);font-weight:900;letter-spacing:.4em;
+  color:#fff;text-shadow:0 0 30px #8b5cf6,0 0 60px #6d28d9;
+  font-family:'Orbitron',sans-serif;}
+#nova-sub{font-size:clamp(.3rem,.5vw,.42rem);letter-spacing:.5em;
+  color:rgba(167,139,250,.5);font-family:'Orbitron',sans-serif;margin-top:4px;}
+#nova-label:hover #nova-name{text-shadow:0 0 40px #a78bfa,0 0 80px #8b5cf6,0 0 120px #6d28d9;}
+
 /* 검색창 */
 #search-wrap{
   position:fixed;bottom:55px;left:50%;transform:translateX(-50%);z-index:20;
@@ -163,6 +176,10 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 <div id="logo">
   <div id="logo-title">NOVA UNIVERSE</div>
   <div id="logo-sub">AI BUSINESS AUTOMATION</div>
+</div>
+<div id="nova-label">
+  <div id="nova-name">NOVA</div>
+  <div id="nova-sub">AI CORE</div>
 </div>
 <div id="hint">드래그로 우주를 탐험하세요</div>
 <div id="search-wrap">
@@ -415,25 +432,44 @@ scene.add(new THREE.Points(nearGeo,nearMat));
     vertexColors:true,transparent:true,depthWrite:false})));
 })();
 
-// ─── 블랙홀 ──────────────────────────────────────────
-const bh=new THREE.Mesh(new THREE.SphereGeometry(3.5,64,64),
-  new THREE.MeshBasicMaterial({color:0x000000}));
-scene.add(bh);
-// 광환
-[{r:5.2,t:0.6,o:0.18},{r:7,t:0.3,o:0.10},{r:9.5,t:0.2,o:0.06}].forEach(d=>{
-  scene.add(new THREE.Mesh(new THREE.SphereGeometry(d.r,32,32),
-    new THREE.MeshBasicMaterial({color:0x6d28d9,transparent:true,opacity:d.o,side:THREE.BackSide})));
+// ─── NOVA AI 코어 ─────────────────────────────────────
+// 코어 본체 (살아 숨쉬는 에너지 구체)
+const novaCore=new THREE.Mesh(new THREE.SphereGeometry(3.2,64,64),
+  new THREE.MeshBasicMaterial({color:0x7c3aed}));
+scene.add(novaCore);
+// 에너지 레이어 (3겹 글로우)
+const novaGlows=[];
+[{r:5,o:0.18,c:0x8b5cf6},{r:7.5,o:0.10,c:0x6d28d9},{r:11,o:0.05,c:0x4338ca}].forEach(d=>{
+  const m=new THREE.Mesh(new THREE.SphereGeometry(d.r,32,32),
+    new THREE.MeshBasicMaterial({color:d.c,transparent:true,opacity:d.o,side:THREE.BackSide}));
+  scene.add(m); novaGlows.push(m);
 });
-// 강착원반
-const disk1=new THREE.Mesh(new THREE.TorusGeometry(7,0.6,16,200),
-  new THREE.MeshBasicMaterial({color:0x7c3aed,transparent:true,opacity:0.55}));
+// 에너지 링 (회전하는 궤도 링)
+const disk1=new THREE.Mesh(new THREE.TorusGeometry(6.5,0.18,16,200),
+  new THREE.MeshBasicMaterial({color:0xa78bfa,transparent:true,opacity:0.6}));
 disk1.rotation.x=Math.PI/2.3;scene.add(disk1);
-const disk2=new THREE.Mesh(new THREE.TorusGeometry(10,0.3,12,200),
-  new THREE.MeshBasicMaterial({color:0x4338ca,transparent:true,opacity:0.35}));
+const disk2=new THREE.Mesh(new THREE.TorusGeometry(9,0.1,12,200),
+  new THREE.MeshBasicMaterial({color:0x818cf8,transparent:true,opacity:0.35}));
 disk2.rotation.x=Math.PI/2.1;disk2.rotation.z=0.4;scene.add(disk2);
-const disk3=new THREE.Mesh(new THREE.TorusGeometry(13,0.18,10,200),
-  new THREE.MeshBasicMaterial({color:0x312e81,transparent:true,opacity:0.18}));
+const disk3=new THREE.Mesh(new THREE.TorusGeometry(12,0.06,10,200),
+  new THREE.MeshBasicMaterial({color:0x6366f1,transparent:true,opacity:0.2}));
 disk3.rotation.x=Math.PI/2.5;disk3.rotation.z=-0.3;scene.add(disk3);
+// 신경망 빛줄기
+(function(){
+  const mat=new THREE.LineBasicMaterial({color:0xa78bfa,transparent:true,opacity:0.15});
+  for(let i=0;i<24;i++){
+    const theta=Math.random()*Math.PI*2, phi=Math.acos(2*Math.random()-1);
+    const r=8+Math.random()*12;
+    const pts=[
+      new THREE.Vector3(0,0,0),
+      new THREE.Vector3(r*Math.sin(phi)*Math.cos(theta),r*Math.sin(phi)*Math.sin(theta),r*Math.cos(phi))
+    ];
+    scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),mat));
+  }
+})();
+// 코어 조명
+const novaLight=new THREE.PointLight(0x8b5cf6,5,120);
+scene.add(novaLight);
 
 // ─── 행성 + 궤도 ─────────────────────────────────────
 const planetMeshes=[],planetAngles=[];
@@ -589,13 +625,15 @@ function animate(){
     });
   }
 
-  // 블랙홀
+  // NOVA 코어 애니메이션
   disk1.rotation.z=t*0.5;
   disk2.rotation.z=-t*0.3;
   disk3.rotation.z=t*0.18;
-  const pulse=1+Math.sin(t*1.2)*0.04;
-  bh.scale.set(pulse,pulse,pulse);
+  const pulse=1+Math.sin(t*1.4)*0.06;
+  novaCore.scale.set(pulse,pulse,pulse);
+  novaGlows[0].scale.set(1+Math.sin(t*1.2)*0.04,1+Math.sin(t*1.2)*0.04,1+Math.sin(t*1.2)*0.04);
   coreLight.intensity=3.5+Math.sin(t*1.8)*0.8;
+  novaLight.intensity=4+Math.sin(t*2.1)*1.5;
 
   // 별 깜빡임 (근거리 별만)
   nearMat.opacity=0.88+Math.sin(t*0.7)*0.06;
@@ -681,9 +719,19 @@ animate();
   lbl.innerHTML=`<span class="name" style="color:#fff;font-size:.48rem">✦ ${user.nickname}</span><span class="tag">MY STAR</span>`;
   document.body.appendChild(lbl);
 
-  window._userStar={mesh,glow,light,label:lbl,x:ux,y:0,z:uz};
+  window._userStar={mesh,glow,light,label:lbl,x:ux,y:0,z:uz,userId:user.user_id};
+
+  // 별 라벨 클릭 → 채팅 페이지
+  lbl.style.pointerEvents='all';
+  lbl.style.cursor='pointer';
+  lbl.onclick=()=>{ location.href='/chat?id='+user.user_id; };
+
   setTimeout(()=>panel.style.opacity='1',1500);
 })();
+
+// NOVA 라벨 표시 + 클릭
+setTimeout(()=>document.getElementById('nova-label').style.opacity='1',2000);
+document.getElementById('nova-label').onclick=()=>{ location.href='/chat'; };
 
 // ─── 검색 기능 ───────────────────────────────────────
 (function(){
