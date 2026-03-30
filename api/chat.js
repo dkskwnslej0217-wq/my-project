@@ -26,7 +26,7 @@ export default async function handler(req) {
 
   // CORS — 자신의 도메인만 허용
   const origin = req.headers.get('origin') ?? '';
-  const allowed = origin.includes('nova-universe') || origin === '';
+  const allowed = origin.includes('vercel.app') || origin === '';
   if (!allowed) {
     return new Response('Forbidden', { status: 403 });
   }

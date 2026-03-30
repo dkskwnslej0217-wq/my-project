@@ -19,7 +19,7 @@ export default async function handler(req) {
   }
 
   const origin = req.headers.get('origin') ?? '';
-  const allowed = origin.includes('nova-universe') || origin === '';
+  const allowed = origin.includes('vercel.app') || origin === '';
   if (!allowed) {
     return new Response('Forbidden', { status: 403 });
   }
