@@ -4,6 +4,7 @@ node_modules/
 .DS_Store
 
 .vercel
+.claude/
 
 # 미디어 파일 (로컬 전용)
 *.mp4
