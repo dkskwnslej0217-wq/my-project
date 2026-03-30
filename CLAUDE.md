@@ -50,6 +50,11 @@
 - API 키: .env 파일에서만 읽기
 - 모델 선택: brain/모델선택.md 참조, 단순 작업은 무료 모델 우선
 
+## 실행 최적화
+- 복잡한 설계: "ultrathink" 키워드 사용
+- 세션 내 반복 모니터링: /loop 활용
+- 외부 자동화: Make.com 유지 (24/7, 토큰 절감)
+
 ## 멀티유저
 .env에서 USER_ID 읽기 → Supabase 조회/저장 시 user_id 필터 적용
 
@@ -101,7 +106,7 @@ memory/폴백로그.md에 기록
 매주 월요일 3줄 성능 보고 / 기준선 미달 시 즉시 조치
 
 ## 버전 관리
-brain/skills/CLAUDE.md 수정 전 brain/버전관리.md 절차 준수
+CLAUDE.md 수정 전 brain/버전관리.md 절차 준수
 현재 버전: memory/현재버전.md / 변경이력: memory/변경이력.md
 
 ## 수익 추적

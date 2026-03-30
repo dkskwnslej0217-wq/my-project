@@ -26,7 +26,7 @@ export default async function handler(req) {
 
   // CORS — 자신의 도메인만 허용
   const origin = req.headers.get('origin') ?? '';
-  const allowed = origin.includes('vercel.app') || origin.includes('nova-universe') || origin === '';
+  const allowed = origin.includes('nova-universe') || origin === '';
   if (!allowed) {
     return new Response('Forbidden', { status: 403 });
   }
@@ -66,7 +66,7 @@ export default async function handler(req) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'llama-3.1-8b-instant',
+      model: 'llama-3.3-70b-versatile',
       messages: [
         {
           role: 'system',
