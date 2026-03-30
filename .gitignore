@@ -4,3 +4,9 @@ node_modules/
 .DS_Store
 
 .vercel
+
+# 미디어 파일 (로컬 전용)
+*.mp4
+*.mp3
+*.wav
+*.mov
