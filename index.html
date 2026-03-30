@@ -78,6 +78,26 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   background:radial-gradient(ellipse at center,#6d28d9 0%,#000 60%);
   opacity:0;transition:opacity .2s;}
 
+/* 유저 패널 — 우상단 */
+#user-panel{
+  position:fixed;top:20px;right:24px;z-index:20;
+  display:flex;align-items:center;gap:10px;
+  opacity:0;transition:opacity 1s ease;font-family:'Orbitron',sans-serif;
+}
+#user-nickname{font-size:clamp(.38rem,.52vw,.48rem);letter-spacing:.18em;color:rgba(255,255,255,.65);}
+#invite-wrap{display:none;align-items:center;gap:6px;}
+#invite-link{background:rgba(255,255,255,.03);border:1px solid rgba(139,92,246,.18);
+  border-radius:6px;color:rgba(139,92,246,.55);font-family:'Orbitron',sans-serif;
+  font-size:.36rem;letter-spacing:.08em;padding:.28rem .45rem;width:150px;outline:none;}
+#copy-btn{background:rgba(109,40,217,.25);border:1px solid rgba(139,92,246,.3);
+  color:#c4b5fd;font-family:'Orbitron',sans-serif;font-size:.36rem;letter-spacing:.1em;
+  padding:.28rem .55rem;border-radius:6px;cursor:pointer;white-space:nowrap;transition:background .2s;}
+#copy-btn:hover{background:rgba(109,40,217,.5);}
+#login-btn{font-family:'Orbitron',sans-serif;font-size:.4rem;letter-spacing:.2em;
+  color:rgba(139,92,246,.55);text-decoration:none;
+  border:1px solid rgba(139,92,246,.18);border-radius:6px;padding:.32rem .65rem;transition:color .2s,border-color .2s;}
+#login-btn:hover{color:#c4b5fd;border-color:#8b5cf6;}
+
 /* 피드백 버튼 */
 #fb-btn{
   position:fixed;bottom:24px;right:24px;z-index:50;
@@ -129,6 +149,14 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 <div id="hint">행성을 클릭해서 모듈로 진입하세요</div>
 
 <div id="tooltip"><div id="tooltip-name"></div><div id="tooltip-desc"></div></div>
+
+<div id="user-panel">
+  <span id="user-nickname"></span>
+  <div id="invite-wrap">
+    <input id="invite-link" type="text" readonly/>
+    <button id="copy-btn">SHARE ✦</button>
+  </div>
+</div>
 
 <button id="fb-btn">FEEDBACK</button>
 <div id="fb-modal">
@@ -481,6 +509,15 @@ function updateLabels(){
     labels[i].style.left=((wp.x+1)/2*window.innerWidth)+'px';
     labels[i].style.top=((-wp.y+1)/2*window.innerHeight+MODULES[i].size*30+16)+'px';
   });
+  // 유저 별 라벨
+  if(window._userStar){
+    const wp=new THREE.Vector3(window._userStar.x,window._userStar.y,window._userStar.z);
+    wp.project(camera);
+    if(wp.z>1){window._userStar.label.style.display='none';return;}
+    window._userStar.label.style.display='block';
+    window._userStar.label.style.left=((wp.x+1)/2*window.innerWidth)+'px';
+    window._userStar.label.style.top=((-wp.y+1)/2*window.innerHeight+20)+'px';
+  }
 }
 
 // ─── 리사이즈 ─────────────────────────────────────────
@@ -525,10 +562,84 @@ function animate(){
   camera.position.y=camBY;
   camera.lookAt(0,0,0);
 
+  // 유저 별 펄스
+  if(window._userStar){
+    const p=1+Math.sin(t*2.2)*0.18;
+    window._userStar.mesh.scale.set(p,p,p);
+    window._userStar.glow.scale.set(p,p,p);
+    window._userStar.light.intensity=2+Math.sin(t*2.2)*0.9;
+  }
+
   updateLabels();
   renderer.render(scene,camera);
 }
 animate();
+
+// ─── ?ref= 초대 파라미터 캡처 ────────────────────────
+(function(){
+  const ref=new URLSearchParams(location.search).get('ref');
+  if(ref) localStorage.setItem('nova_ref',ref);
+})();
+
+// ─── 유저 별 렌더링 ──────────────────────────────────
+(function(){
+  const panel=document.getElementById('user-panel');
+  const raw=localStorage.getItem('nova_user');
+  if(!raw){
+    panel.innerHTML='<a href="/login.html" id="login-btn">LOGIN</a>';
+    setTimeout(()=>panel.style.opacity='1',1500);
+    return;
+  }
+  let user;
+  try{user=JSON.parse(raw);}catch{return;}
+
+  document.getElementById('user-nickname').textContent='✦ '+user.nickname;
+  document.getElementById('invite-wrap').style.display='flex';
+  const inviteLink=location.origin+'/?ref='+user.user_id;
+  document.getElementById('invite-link').value=inviteLink;
+  document.getElementById('copy-btn').onclick=function(){
+    navigator.clipboard.writeText(inviteLink).then(()=>{
+      this.textContent='COPIED!';
+      setTimeout(()=>this.textContent='SHARE ✦',1500);
+    });
+  };
+
+  const sx=user.star_x||0, sy=user.star_y||12, sz=user.star_z||0;
+  const col=parseInt((user.star_color||'#ffffff').replace('#',''),16);
+  const sSize=(user.star_size||1)*0.4;
+
+  // 별 본체
+  const mesh=new THREE.Mesh(
+    new THREE.SphereGeometry(sSize,16,16),
+    new THREE.MeshBasicMaterial({color:col})
+  );
+  mesh.position.set(sx,sy,sz);
+  scene.add(mesh);
+
+  // 글로우
+  const glow=new THREE.Mesh(
+    new THREE.SphereGeometry(sSize*4,16,16),
+    new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.1,side:THREE.BackSide})
+  );
+  glow.position.set(sx,sy,sz);
+  scene.add(glow);
+
+  // 포인트 라이트
+  const light=new THREE.PointLight(col,2,25);
+  light.position.set(sx,sy,sz);
+  scene.add(light);
+
+  // 라벨
+  const lbl=document.createElement('div');
+  lbl.className='planet-label';
+  lbl.style.cursor='default';
+  lbl.style.pointerEvents='none';
+  lbl.innerHTML=`<span class="name" style="color:#fff;font-size:.48rem">✦ ${user.nickname}</span><span class="tag">MY STAR</span>`;
+  document.body.appendChild(lbl);
+
+  window._userStar={mesh,glow,light,label:lbl,x:sx,y:sy,z:sz};
+  setTimeout(()=>panel.style.opacity='1',1500);
+})();
 
 // ─── 피드백 모달 ─────────────────────────────────────
 const fbModal=document.getElementById('fb-modal');
