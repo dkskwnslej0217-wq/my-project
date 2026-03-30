@@ -17,12 +17,14 @@ curl -X POST "$SUPABASE_URL/rest/v1/memory" \
     "score_trend": 0,
     "score_hook": 0,
     "score_comment": 0,
-    "score_total": 0
+    "score_total": 0,
+    "user_id": "'"$USER_ID"'"
   }'
 
-## 불러오기 (최근 5개)
-curl "$SUPABASE_URL/rest/v1/memory?order=created_at.desc&limit=5" \
-  -H "apikey: $SUPABASE_KEY"
+## 불러오기 (최근 5개, user_id 필터 적용)
+curl "$SUPABASE_URL/rest/v1/memory?user_id=eq.$USER_ID&order=created_at.desc&limit=5" \
+  -H "apikey: $SUPABASE_KEY" \
+  -H "Authorization: Bearer $SUPABASE_KEY"
 
 ## 사용 규칙
 - 실행 시작 시: 최근 5개 기록 불러오기

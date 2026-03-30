@@ -34,7 +34,15 @@
 11. 경쟁자 분석 → 차별화 포인트
 12. brain/바이럴공식.md → 공식 1개 선택
 13. 플랫폼 판단 → 해당 skills/ 1개만 로드
-14. 콘텐츠 생성 (A/B 조합 선택)
+    - Threads → 텍스트 콘텐츠 생성
+    - Instagram → 텍스트 생성 후 brain/영상생성.md 체크리스트 확인
+      → 체크리스트 ✅ → 영상 생성 / ❌ → 스크립트만 저장
+    - YouTube → 텍스트 생성 후 brain/영상생성.md 체크리스트 확인
+      → 체크리스트 ✅ → 영상 생성 / ❌ → 스크립트만 저장
+14. 콘텐츠 생성 — brain/멀티모델파이프라인.md 실행:
+    14a. Gemini Flash → 트렌드 키워드 추출
+    14b. Groq → 훅 초안 3개 생성 (빠름)
+    14c. Claude → 최종 완성 + 브랜드 톤 적용
 15. skills/출력포맷.md → 플랫폼별 포맷 적용
 16. brain/감정분석.md → 감정 흐름 체크
 
@@ -43,10 +51,11 @@
 18. output/ 저장
 19. memory/context.md 업데이트
 20. 자기점수 산정 (score_trend / score_hook / score_comment / score_total)
-21. score 5점 이하 → brain/실패감지.md 실행
+21. score 5점 이하 → brain/실패감지.md 실행 + brain/에러알림.md (텔레그램 알림)
 22. Supabase 저장
-23. score_total ≥ 7점일 때만 → brain/자동업로드.md → 플랫폼별 Make.com 웹훅 호출
-    (7점 미만 → 웹훅 건너뜀, Make.com 한도 절약)
+23. score_total ≥ 7점일 때만 → output/staging/ 저장 (헤더 포함: platform/topic/score/status:staging)
+    score < 7 → output/ 저장만 (staging 제외)
+    ※ 업로드는 "업로드 시작해줘" 명령 시 brain/스테이징.md 실행
 
 ## 완료
 24. 완료 보고 (3줄 이내)

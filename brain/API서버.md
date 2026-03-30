@@ -1,4 +1,4 @@
-# 준호 API 서버 — 재판매 구조
+# junho API 서버 — 재판매 구조
 
 ## 목표
 지금 만든 시스템을 SaaS로 포장해서
@@ -7,13 +7,13 @@
 ## 작동 구조
 사용자 접속
 ↓
-준호 웹사이트에서 로그인
+junho 웹사이트에서 로그인
 ↓
 Supabase에서 플랜 확인
 ↓
 플랜별 한도 체크
 ↓
-Anthropic API 호출 (준호 API 키로)
+Anthropic API 호출 (junho API 키로)
 ↓
 결과 사용자한테 전달
 ↓
@@ -51,4 +51,4 @@ Claude Haiku 사용 (저렴)
 - 사용자별 API 키 발급
 - Rate Limiting
 - JWT 인증
-- 준호 API 키 절대 노출 금지
+- junho API 키 절대 노출 금지

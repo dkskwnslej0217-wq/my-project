@@ -92,6 +92,51 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 #warp{position:fixed;inset:0;z-index:100;pointer-events:none;
   background:radial-gradient(ellipse at center,#7c3aed 0%,#000 70%);
   opacity:0;transition:opacity .25s;}
+/* 피드백 버튼 */
+#fb-btn{
+  position:fixed;bottom:24px;right:24px;z-index:50;
+  background:rgba(10,5,30,.85);border:1px solid rgba(167,139,250,.3);
+  color:rgba(167,139,250,.7);font-family:'Orbitron',sans-serif;
+  font-size:.5rem;letter-spacing:.15em;padding:.5rem .9rem;
+  border-radius:20px;cursor:pointer;pointer-events:all;
+  transition:border-color .2s,color .2s;
+}
+#fb-btn:hover{border-color:#a78bfa;color:#fff;}
+/* 피드백 모달 */
+#fb-modal{
+  display:none;position:fixed;inset:0;z-index:150;
+  background:rgba(2,0,10,.8);align-items:center;justify-content:center;
+}
+#fb-modal.open{display:flex;}
+#fb-box{
+  background:#0a0519;border:1px solid rgba(167,139,250,.3);
+  border-radius:14px;padding:2rem;width:min(90vw,380px);
+  font-family:'Orbitron',sans-serif;
+}
+#fb-box h3{font-size:.7rem;letter-spacing:.2em;color:#fff;margin-bottom:1.2rem;}
+#fb-issue{
+  width:100%;background:rgba(255,255,255,.04);
+  border:1px solid rgba(167,139,250,.2);border-radius:8px;
+  color:#fff;font-family:'Orbitron',sans-serif;font-size:.55rem;
+  letter-spacing:.08em;padding:.7rem;resize:none;height:90px;
+  outline:none;margin-bottom:.8rem;
+}
+#fb-cat{
+  width:100%;background:rgba(255,255,255,.04);
+  border:1px solid rgba(167,139,250,.2);border-radius:8px;
+  color:#a78bfa;font-family:'Orbitron',sans-serif;font-size:.55rem;
+  letter-spacing:.08em;padding:.6rem;outline:none;margin-bottom:1.2rem;
+  cursor:pointer;
+}
+#fb-cat option{background:#0a0519;}
+.fb-row{display:flex;gap:.6rem;}
+.fb-btn-s{
+  flex:1;padding:.6rem;border-radius:8px;font-family:'Orbitron',sans-serif;
+  font-size:.5rem;letter-spacing:.12em;cursor:pointer;border:none;
+}
+#fb-cancel{background:rgba(255,255,255,.06);color:rgba(167,139,250,.6);}
+#fb-send{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;}
+#fb-done{display:none;font-size:.55rem;letter-spacing:.1em;color:#a78bfa;text-align:center;margin-top:.8rem;}
 </style>
 </head>
 <body>
@@ -111,6 +156,24 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   <div id="hint">행성을 클릭해서 모듈로 진입하세요</div>
 </div>
 <div id="tooltip"><div id="tooltip-name"></div><div id="tooltip-desc"></div></div>
+
+<button id="fb-btn">FEEDBACK</button>
+<div id="fb-modal">
+  <div id="fb-box">
+    <h3>문제 / 개선 제안</h3>
+    <textarea id="fb-issue" placeholder="어떤 문제가 있었나요?"></textarea>
+    <select id="fb-cat">
+      <option value="bug">버그</option>
+      <option value="quality">품질 개선</option>
+      <option value="feature">기능 요청</option>
+    </select>
+    <div class="fb-row">
+      <button class="fb-btn-s" id="fb-cancel">취소</button>
+      <button class="fb-btn-s" id="fb-send">전송</button>
+    </div>
+    <div id="fb-done">전송 완료. 감사합니다!</div>
+  </div>
+</div>
 
 <script>
 // ══════════════════════════════════════
@@ -277,6 +340,10 @@ document.addEventListener('mousemove',e=>{
   camTY=12+(-(e.clientY/window.innerHeight-.5))*2;
 });
 
+// 행동 추적 (fire-and-forget)
+const track=(action,target)=>fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'interaction',action,target})}).catch(()=>{});
+track('view','main');
+
 // 툴팁
 const tooltip=document.getElementById('tooltip');
 document.addEventListener('click',e=>{
@@ -286,6 +353,7 @@ document.addEventListener('click',e=>{
   const idx=labels.indexOf(el);
   if(idx<0)return;
   const m=MODULES[idx];
+  track('click',m.name);
   if(m.url){
     const warp=document.getElementById('warp');
     warp.style.opacity='1';
@@ -345,6 +413,19 @@ function animate(){
   renderer.render(scene,camera);
 }
 animate();
+
+// 피드백 모달
+const fbModal=document.getElementById('fb-modal');
+document.getElementById('fb-btn').onclick=()=>fbModal.classList.add('open');
+document.getElementById('fb-cancel').onclick=()=>fbModal.classList.remove('open');
+document.getElementById('fb-send').onclick=async()=>{
+  const issue=document.getElementById('fb-issue').value.trim();
+  if(!issue)return;
+  await fetch('/api/track',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({type:'feedback',issue,category:document.getElementById('fb-cat').value})});
+  document.getElementById('fb-done').style.display='block';
+  setTimeout(()=>{fbModal.classList.remove('open');document.getElementById('fb-issue').value='';document.getElementById('fb-done').style.display='none';},1500);
+};
 </script>
 </body>
 </html>
