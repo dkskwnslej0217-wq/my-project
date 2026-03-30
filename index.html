@@ -44,6 +44,23 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   pointer-events:none;opacity:0;transition:opacity 1s ease;
 }
 
+/* 검색창 */
+#search-wrap{
+  position:fixed;bottom:55px;left:50%;transform:translateX(-50%);z-index:20;
+  display:flex;align-items:center;gap:8px;
+  opacity:0;transition:opacity 1s ease;
+}
+#search-input{
+  background:rgba(4,0,18,.88);border:1px solid rgba(139,92,246,.2);
+  border-radius:20px;color:#fff;font-family:'Orbitron',sans-serif;
+  font-size:.38rem;letter-spacing:.12em;padding:.38rem 1rem;
+  outline:none;width:170px;transition:border-color .2s,width .3s;
+}
+#search-input:focus{border-color:rgba(139,92,246,.5);width:210px;}
+#search-input::placeholder{color:rgba(255,255,255,.18);}
+#search-msg{font-family:'Orbitron',sans-serif;font-size:.36rem;
+  letter-spacing:.1em;color:rgba(139,92,246,.6);white-space:nowrap;}
+
 /* 행성 라벨 */
 .planet-label{
   position:fixed;pointer-events:all;z-index:5;
@@ -147,7 +164,11 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   <div id="logo-title">NOVA UNIVERSE</div>
   <div id="logo-sub">AI BUSINESS AUTOMATION</div>
 </div>
-<div id="hint">행성을 클릭해서 모듈로 진입하세요</div>
+<div id="hint">드래그로 우주를 탐험하세요</div>
+<div id="search-wrap">
+  <input id="search-input" type="text" placeholder="✦ 별 찾기..."/>
+  <span id="search-msg"></span>
+</div>
 
 <div id="tooltip"><div id="tooltip-name"></div><div id="tooltip-desc"></div></div>
 
@@ -536,15 +557,37 @@ function animate(){
   const t=clock.getElapsedTime();
 
   // 행성 공전
-  MODULES.forEach((m,i)=>{
-    planetAngles[i]+=m.speed*0.008;
-    const x=m.orbitA*Math.cos(planetAngles[i]);
-    const z=m.orbitB*Math.sin(planetAngles[i]);
-    planetMeshes[i].position.set(x,0,z);
-    planetMeshes[i].userData.glow.position.set(x,0,z);
-    planetMeshes[i].userData.glow2.position.set(x,0,z);
-    planetMeshes[i].rotation.y=t*0.3;
-  });
+  if(window._userStar && window._userOrbitAngle!==undefined){
+    // 로그인: 유저 별이 중앙 공전
+    window._userOrbitAngle+=0.15*0.008;
+    const ux=28*Math.cos(window._userOrbitAngle);
+    const uz=17*Math.sin(window._userOrbitAngle);
+    window._userStar.mesh.position.set(ux,0,uz);
+    window._userStar.glow.position.set(ux,0,uz);
+    window._userStar.light.position.set(ux,0,uz);
+    window._userStar.x=ux; window._userStar.y=0; window._userStar.z=uz;
+    // 모듈들은 유저 별 주변 위성 공전
+    MODULES.forEach((m,i)=>{
+      planetAngles[i]+=m.speed*0.012;
+      const x=ux+m.orbitA*0.28*Math.cos(planetAngles[i]);
+      const z=uz+m.orbitB*0.28*Math.sin(planetAngles[i]);
+      planetMeshes[i].position.set(x,0,z);
+      planetMeshes[i].userData.glow.position.set(x,0,z);
+      planetMeshes[i].userData.glow2.position.set(x,0,z);
+      planetMeshes[i].rotation.y=t*0.3;
+    });
+  } else {
+    // 비로그인: 모듈들이 중앙 공전 (기존)
+    MODULES.forEach((m,i)=>{
+      planetAngles[i]+=m.speed*0.008;
+      const x=m.orbitA*Math.cos(planetAngles[i]);
+      const z=m.orbitB*Math.sin(planetAngles[i]);
+      planetMeshes[i].position.set(x,0,z);
+      planetMeshes[i].userData.glow.position.set(x,0,z);
+      planetMeshes[i].userData.glow2.position.set(x,0,z);
+      planetMeshes[i].rotation.y=t*0.3;
+    });
+  }
 
   // 블랙홀
   disk1.rotation.z=t*0.5;
@@ -601,29 +644,33 @@ animate();
     });
   };
 
-  const sx=user.star_x||0, sy=user.star_y||12, sz=user.star_z||0;
+  // 궤도 초기 위상 (star_x 값으로 시작 위치 결정)
+  const initPhase=((user.star_x||0)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+  window._userOrbitAngle=initPhase;
+  const ux=28*Math.cos(initPhase), uz=17*Math.sin(initPhase);
+
   const col=parseInt((user.star_color||'#ffffff').replace('#',''),16);
-  const sSize=(user.star_size||1)*0.4;
+  const sSize=(user.star_size||1)*0.5;
 
   // 별 본체
   const mesh=new THREE.Mesh(
     new THREE.SphereGeometry(sSize,16,16),
     new THREE.MeshBasicMaterial({color:col})
   );
-  mesh.position.set(sx,sy,sz);
+  mesh.position.set(ux,0,uz);
   scene.add(mesh);
 
   // 글로우
   const glow=new THREE.Mesh(
     new THREE.SphereGeometry(sSize*4,16,16),
-    new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.1,side:THREE.BackSide})
+    new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.12,side:THREE.BackSide})
   );
-  glow.position.set(sx,sy,sz);
+  glow.position.set(ux,0,uz);
   scene.add(glow);
 
   // 포인트 라이트
-  const light=new THREE.PointLight(col,2,25);
-  light.position.set(sx,sy,sz);
+  const light=new THREE.PointLight(col,2.5,30);
+  light.position.set(ux,0,uz);
   scene.add(light);
 
   // 라벨
@@ -634,8 +681,49 @@ animate();
   lbl.innerHTML=`<span class="name" style="color:#fff;font-size:.48rem">✦ ${user.nickname}</span><span class="tag">MY STAR</span>`;
   document.body.appendChild(lbl);
 
-  window._userStar={mesh,glow,light,label:lbl,x:sx,y:sy,z:sz};
+  window._userStar={mesh,glow,light,label:lbl,x:ux,y:0,z:uz};
   setTimeout(()=>panel.style.opacity='1',1500);
+})();
+
+// ─── 검색 기능 ───────────────────────────────────────
+(function(){
+  const wrap=document.getElementById('search-wrap');
+  const input=document.getElementById('search-input');
+  const msg=document.getElementById('search-msg');
+  setTimeout(()=>wrap.style.opacity='1',2000);
+
+  async function flyToUser(nickname){
+    msg.textContent='탐색 중...';
+    try{
+      const res=await fetch('/api/search-user?nickname='+encodeURIComponent(nickname));
+      const data=await res.json();
+      if(!data||data.error){msg.textContent='별을 찾지 못했어요';setTimeout(()=>msg.textContent='',2000);return;}
+      // 궤도 위치 계산
+      const phase=((data.star_x||0)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+      const tx=28*Math.cos(phase), tz=17*Math.sin(phase);
+      // 카메라 이동
+      const startTarget=controls.target.clone();
+      const endTarget=new THREE.Vector3(tx,0,tz);
+      const startCam=camera.position.clone();
+      const endCam=new THREE.Vector3(tx+15,8,tz+15);
+      let p=0;
+      (function fly(){
+        p+=0.025;
+        if(p>1)p=1;
+        const e=p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
+        controls.target.lerpVectors(startTarget,endTarget,e);
+        camera.position.lerpVectors(startCam,endCam,e);
+        controls.update();
+        if(p<1)requestAnimationFrame(fly);
+      })();
+      msg.textContent='✦ '+data.nickname;
+      setTimeout(()=>msg.textContent='',3000);
+    }catch{msg.textContent='오류 발생';setTimeout(()=>msg.textContent='',2000);}
+  }
+
+  input.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&input.value.trim()) flyToUser(input.value.trim());
+  });
 })();
 
 // ─── 피드백 모달 ─────────────────────────────────────
