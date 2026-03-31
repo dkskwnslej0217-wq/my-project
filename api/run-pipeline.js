@@ -1,7 +1,7 @@
 // api/run-pipeline.js — Make.com 스케줄 트리거 엔드포인트
 // Make.com → 매일 오전 8시 → 이 엔드포인트 호출 → 파이프라인 실행 → Telegram 결과 알림
 
-export const config = { runtime: 'nodejs', maxDuration: 60 };
+export const config = { runtime: 'nodejs' };
 
 const YOUTUBE_KEY   = process.env.YOUTUBE_API_KEY;
 const GEMINI_KEY    = process.env.GEMINI_API_KEY;
