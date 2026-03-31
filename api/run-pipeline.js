@@ -149,6 +149,17 @@ export default async function handler(req) {
     const topic = keywords.split(',')[0].trim();
     await saveToSupabase(topic, final);
 
+    // 유저 수 체크 → 100명 도달 시 알림
+    try {
+      const userRes = await fetch(`${SUPA_URL}/rest/v1/users?select=count`, {
+        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Prefer': 'count=exact' },
+      });
+      const count = parseInt(userRes.headers.get('content-range')?.split('/')[1] ?? '0');
+      if (count >= 100) {
+        await tg(`🎉 유저 100명 돌파! (현재 ${count}명)\n👉 토스페이먼츠 자동 결제 연동할 때입니다.`);
+      }
+    } catch { /* 체크 실패는 무시 */ }
+
     // 성공 알림
     await tg(`✅ NOVA 파이프라인 완료\n\n📌 키워드: ${keywords}\n\n${final.slice(0, 300)}...`);
 
