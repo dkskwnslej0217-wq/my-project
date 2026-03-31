@@ -1,0 +1,167 @@
+// api/run-pipeline.js — Make.com 스케줄 트리거 엔드포인트
+// Make.com → 매일 오전 8시 → 이 엔드포인트 호출 → 파이프라인 실행 → Telegram 결과 알림
+
+export const config = { runtime: 'nodejs', maxDuration: 60 };
+
+const YOUTUBE_KEY   = process.env.YOUTUBE_API_KEY;
+const GEMINI_KEY    = process.env.GEMINI_API_KEY;
+const GROQ_KEY      = process.env.GROQ_API_KEY;
+const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
+const SUPA_URL      = process.env.SUPABASE_URL;
+const SUPA_KEY      = process.env.SUPABASE_KEY;
+const TG_TOKEN      = process.env.TELEGRAM_TOKEN;
+const TG_CHAT       = process.env.TELEGRAM_CHAT_ID;
+const PIPELINE_SECRET = process.env.PIPELINE_SECRET;
+
+// ─── Telegram 알림 ────────────────────────────────────────
+async function tg(msg) {
+  try {
+    await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TG_CHAT, text: msg }),
+    });
+  } catch { /* 알림 실패는 무시 */ }
+}
+
+// ─── 14a: YouTube TOP10 ───────────────────────────────────
+async function fetchTrending() {
+  const res = await fetch(
+    `https://www.googleapis.com/youtube/v3/videos?part=snippet&chart=mostPopular&regionCode=KR&maxResults=10&key=${YOUTUBE_KEY}`
+  );
+  if (!res.ok) throw new Error(`YouTube ${res.status}`);
+  const data = await res.json();
+  return data.items.map(i => i.snippet.title);
+}
+
+// ─── 14b: Gemini 키워드 추출 ─────────────────────────────
+async function extractKeywords(titles) {
+  const prompt = `아래는 현재 한국 유튜브 급상승 영상 제목들입니다:\n${titles.join('\n')}\n\nSNS 콘텐츠(스레드/인스타/유튜브쇼츠)에 활용할 핵심 키워드 5개 추출. 단어만, 쉼표 구분.`;
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+    }
+  );
+  if (!res.ok) throw new Error(`Gemini ${res.status}`);
+  const data = await res.json();
+  return data.candidates[0].content.parts[0].text.trim();
+}
+
+// ─── 14c: Groq 훅 초안 ───────────────────────────────────
+async function generateHooks(keywords) {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: `키워드: ${keywords}\n\n스레드 첫 줄 훅 3개. 각 40자 이내. 번호 붙여서. 강렬하게.` }],
+      max_tokens: 400,
+    }),
+  });
+  if (!res.ok) throw new Error(`Groq ${res.status}`);
+  const data = await res.json();
+  return data.choices[0].message.content;
+}
+
+// ─── 14d: Claude 최종 완성 ───────────────────────────────
+async function finalizeContent(keywords, hooks) {
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': ANTHROPIC_KEY,
+      'anthropic-version': '2023-06-01',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 800,
+      messages: [{
+        role: 'user',
+        content: `키워드: ${keywords}\n\n훅 후보:\n${hooks}\n\n가장 강한 훅 1개 골라서 스레드 콘텐츠 완성:\n[훅 - 1줄]\n[본문 - 3~5줄, 짧고 강하게]\n[마무리 - 행동 유도 1줄]\n\n한국어, 소상공인/1인 창업자 타겟, 실용적이고 친근한 톤.`,
+      }],
+    }),
+  });
+  if (!res.ok) throw new Error(`Claude ${res.status}`);
+  const data = await res.json();
+  return data.content[0].text;
+}
+
+// ─── Supabase 저장 ────────────────────────────────────────
+async function saveToSupabase(topic, content) {
+  try {
+    await fetch(`${SUPA_URL}/rest/v1/memory`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        date: new Date().toISOString().slice(0, 10),
+        topic,
+        summary: content.slice(0, 200),
+        result: content,
+      }),
+    });
+  } catch { /* 저장 실패는 파이프라인 중단하지 않음 */ }
+}
+
+// ─── 메인 핸들러 ──────────────────────────────────────────
+export default async function handler(req) {
+  // 보안: 시크릿 토큰 검증
+  const secret = req.headers.get('x-pipeline-secret');
+  if (secret !== PIPELINE_SECRET) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
+  }
+
+  const startedAt = new Date().toISOString();
+  await tg(`🚀 NOVA 파이프라인 시작 (${startedAt.slice(0, 16)})`);
+
+  try {
+    // 14a YouTube
+    let titles;
+    try {
+      titles = await fetchTrending();
+    } catch(e) {
+      await tg(`⚠️ YouTube 수집 실패 → 기본 주제로 폴백\n${e.message}`);
+      titles = null;
+    }
+
+    // 14b Gemini
+    let keywords;
+    try {
+      keywords = await extractKeywords(titles ?? ['AI 자동화', '콘텐츠 수익화', '1인 창업']);
+    } catch(e) {
+      await tg(`⚠️ Gemini 실패 → 기본 키워드 사용\n${e.message}`);
+      keywords = 'AI자동화, 콘텐츠수익, 1인창업, SNS마케팅';
+    }
+
+    // 14c Groq
+    const hooks = await generateHooks(keywords);
+
+    // 14d Claude
+    const final = await finalizeContent(keywords, hooks);
+
+    // Supabase 저장
+    const topic = keywords.split(',')[0].trim();
+    await saveToSupabase(topic, final);
+
+    // 성공 알림
+    await tg(`✅ NOVA 파이프라인 완료\n\n📌 키워드: ${keywords}\n\n${final.slice(0, 300)}...`);
+
+    return new Response(JSON.stringify({ ok: true, topic, keywords }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+  } catch(e) {
+    await tg(`❌ NOVA 파이프라인 실패\n${e.message}`);
+    return new Response(JSON.stringify({ ok: false, error: e.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
