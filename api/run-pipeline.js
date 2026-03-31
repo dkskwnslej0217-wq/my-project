@@ -117,6 +117,26 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
+  // 매월 1일 → 사용량 자동 리셋
+  const today = new Date();
+  if (today.getDate() === 1) {
+    try {
+      await fetch(`${SUPA_URL}/rest/v1/users`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPA_KEY,
+          'Authorization': `Bearer ${SUPA_KEY}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify({ usage_count: 0 }),
+      });
+      await tg(`✅ 월 사용량 초기화 완료 (${today.toISOString().slice(0, 7)})`);
+    } catch(e) {
+      await tg(`⚠️ 월 초기화 실패\n${e.message}`);
+    }
+  }
+
   const startedAt = new Date().toISOString();
   await tg(`🚀 NOVA 파이프라인 시작 (${startedAt.slice(0, 16)})`);
 
