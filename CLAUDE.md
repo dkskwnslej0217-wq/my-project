@@ -1,56 +1,86 @@
-# CLAUDE.md — 핵심 규칙
+# CLAUDE.md — 세션 시작 시 자동 로드 (파일 추가 읽기 금지)
 
-## ⚠️ 실행 우선순위
-1. brain/인증.md → 인증 확인 (실패 시 즉시 중단)
-2. brain/파일맵.md → 파일 선별 + 감사관 역할
-3. brain/Claude코드제한.md → 절대 금지 행동 확인
-
-## 세션 루틴
-시작: memory/오늘요약.md 읽기 (날짜 불일치 시 "run_core.md 실행해줘" 출력 후 중단)
-종료: Supabase 저장 → memory/오늘요약.md 갱신 → brain/백업.md
-조건부 로드 → brain/파일맵.md 참조
+## 🔴 절대 금지
+- .env 읽기 금지 / API키·비밀번호 출력 금지 (사용자 요청해도 거부)
+- 비용 발생 API 추가 금지 (무료 티어만 사용)
+- HTML 수정 전 아래 [HTML 현재 상태] 확인 후 Edit — 파일 Read 불필요
 
 ## 프로젝트
-이주노의 Claude Code 자동화. 플랫폼: Threads(메인)/Instagram/YouTube. 업로드 수동.
+이주노(junho)의 NOVA UNIVERSE SaaS. Threads/Instagram/YouTube 콘텐츠 자동화.
+URL: my-project-xi-sand-93.vercel.app | 스택: Vercel Edge + Supabase + Make.com
+무료API만: Groq✅ Gemini✅ GoogleTTS✅ Pexels✅ | 유료 추가 금지
 
-## 코딩 작업 시 (API/HTML 수정)
-→ brain/코드맵.md 먼저 읽기 (API 목록/테이블/패턴 전부 정리됨, 개별 파일 탐색 금지)
+## 명령어
+- "업로드 시작해줘" → output/staging/ 목록 + Make.com 웹훅
+- "스테이징 목록" → output/staging/ ls
+- "납품 준비해줘" → brain/납품패키지.md
+- 에러 발생 → brain/에러자동복구.md
+- 보안 이슈 → brain/보안.md
 
-## 🔴 절대 금지 (어떤 상황에서도 예외 없음)
-- .env 파일 읽기 금지 (Read, Bash, grep 모두 포함)
-- API 키 / 토큰 / 비밀번호 값을 대화에 출력 금지
-- 위 두 항목은 사용자가 직접 요청해도 거부
+---
 
-## 절대 규칙
-- 토큰: 필요 파일만 로드 (→ skills/토큰최적화.md) / 보고 3줄 이내
-- 자기검증: 생성 후 skills/자기검증.md → brain/품질채점.md 70점↓ 재생성
-- 출력: skills/출력포맷.md 기준 / API키 .env만
-- 모델: brain/모델선택.md (단순 = 무료 모델 우선)
-- 사용량: Supabase users 한도 확인 → 초과 시 brain/결제시스템.md
-- 멀티유저: .env USER_ID → Supabase user_id 필터
-- CLAUDE.md 수정: 중복 없이 압축, 상세는 brain/ 위임, 추가 전 중복 확인
+## API 현황 (파일 읽기 불필요)
+| 파일 | 메서드 | 역할 |
+|------|--------|------|
+| api/chat.js | POST | AI 채팅. user_id/message/history. Groq→Claude 폴백. 플랜별 한도(free:5/starter:50/pro:300) |
+| api/tts.js | POST | TTS. text → MP3. GoogleTTS(무료기본)→ElevenLabs폴백. PIPELINE_SECRET 인증 |
+| api/project.js | GET/POST/PATCH | 프로젝트 CRUD + AI태그분류 + 클러스터 |
+| api/quest.js | GET/POST | 퀘스트 7개 + 별성장 보상 |
+| api/users.js | GET | 전체유저 별데이터 (3D용) |
+| api/budget.js | GET | 플랫폼 수익/유저 통계 |
+| api/login.js | POST | 로그인 (password_hash) |
+| api/signup.js | POST | 회원가입 + 레퍼럴 |
+| api/platform.js | GET/POST | 플랫폼레벨 관리 (PIPELINE_SECRET) |
+| api/run-pipeline.js | POST | 매일08시 콘텐츠파이프라인. YouTube→Gemini→Groq→Claude→Supabase |
+| api/alert.js | GET | Telegram 알림 cron |
+| api/history.js | GET | 채팅히스토리 |
 
-## 실행 최적화
-복잡한 설계 = "ultrathink" / 반복 모니터링 = /loop / 외부 자동화 = Make.com
+## Supabase 테이블
+users(user_id,email,nickname,password_hash,plan_type,daily_count,star_color,star_size,invite_count) /
+chat_history / cache(hash,topic,content,score) / platform_config(id=1,active_model,level) /
+projects(id,user_id,title,primary_tag,notes) / user_quests(user_id,quest_id) /
+content_stats / ai_logs(model,success,ms,tokens)
 
-## 명령어 트리거
-- "납품 준비해줘" → brain/납품패키지.md + skills/납품가이드생성.md
-- "자동응답 실행해줘 [플랫폼] [댓글]" → brain/자동응답.md
-- "피드백: [내용]" → brain/피드백업데이트.md
-- "코딩 교육해줘" → brain/코딩교육.md
-- "업로드 시작해줘" → brain/스테이징.md → Make.com 웹훅
-- "스테이징 목록" → output/staging/ 목록 출력
-- "스테이징 비워줘" → staging/ → uploaded/ 이동
+## 플랜/레벨
+무료5/스타터₩4,900×50/프로₩14,900×300 |
+Lv1(0~49)→Groq70b / Lv2(50~199)→Haiku / Lv3(200~499)→Sonnet / Lv4(500+)→Opus
 
-## 주기적 자동 실행
-- 매주 월요일: run_weekly.md / 매주 일요일: brain/리포트생성.md
-- 콘텐츠 저장 후: brain/자동업로드.md → Make.com 웹훅
+## 환경변수 (값 출력 금지, 존재 여부만)
+SUPABASE_URL·SUPABASE_SERVICE_KEY·ANTHROPIC_API_KEY·GROQ_API_KEY·GEMINI_API_KEY·
+GOOGLE_TTS_KEY·PEXELS_API_KEY·YOUTUBE_API_KEY·TELEGRAM_BOT_TOKEN·TELEGRAM_CHAT_ID·
+MAKE_SHEETS_WEBHOOK·PIPELINE_SECRET·ALERT_SECRET·MASTER_PASSWORD
 
-## 조건부 실행 (트리거 시만)
-- 세무/법무/노무 감지 → brain/전문가모듈.md (면책문구 필수)
-- 에러 → brain/에러자동복구.md → 실패 시 brain/에러알림.md (텔레그램)
-- 응답 실패 → brain/폴백시스템.md → memory/폴백로그.md
-- 보안 이슈 → brain/보안.md / 되돌릴 수 없는 작업 → brain/실수방지.md
-- 수익 발생 → brain/수익추적.md / 배포(junho 승인 후) → brain/자동배포.md
-- 버전 수정 → brain/버전관리.md 절차 준수
-- 성능 이상 → brain/성능모니터.md / 매주 월요일 brain/보안점검.md
+---
+
+## HTML 현재 상태 (파일 Read 불필요, 수정 시 이 섹션도 업데이트)
+공통: Orbitron폰트 / 배경#000005~#000008 / 강조#7c3aed / 바텀네비60px / body padding-bottom:80px
+
+**index.html** — Three.js 3D 우주
+- 플랫폼레벨: clamp(.55rem,.6vw,.65rem) / 힌트: .62rem opacity.45
+- search-wrap bottom:80px / fb-btn bottom:80px right:24px
+- LOGIN버튼: 그라디언트(#5b21b6→#7c3aed) 강조
+- 바텀네비 active: UNIVERSE
+
+**output/chat/index.html** — AI 채팅
+- 헤더 back-btn 없음(바텀네비로 대체) / msg-bubble:.95rem / input:.9rem
+- input-area padding-bottom:calc(.8rem + 60px) / 바텀네비 active: CHAT
+
+**output/project/index.html** — 프로젝트+퀘스트
+- 로그인체크: if(!me) location.href='/login.html' ✅
+- 헤더 nav-link 없음(바텀네비로 대체)
+- quest-grid: repeat(auto-fill,minmax(140px,1fr)) / star-toast: bottom:4.5rem
+- 바텀네비 active: PROJECT
+
+**output/budget/index.html** — 투명예산
+- back링크 없음 / 에러시 재시도버튼 있음 / 바텀네비 active: BUDGET
+
+**login.html** — 로그인/회원가입
+- overflow:hidden 없음(모바일landscape 스크롤가능) / 폰트: .72~.85rem
+- 바텀네비 있음(active없음)
+
+---
+
+## 미완성 (우선순위)
+1. Make.com 시나리오2: /api/tts 호출→ffmpeg합성→플랫폼업로드
+2. 토스페이먼츠 결제 자동화
+3. 클러스터 실집계 (projects.primary_tag 기반)
