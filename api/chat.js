@@ -128,7 +128,7 @@ export default async function handler(req) {
   if (!allowed) return new Response('Forbidden', { status: 403 });
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  if (isRateLimited(ip)) {
+  if (await isRateLimited(ip)) {
     return new Response(JSON.stringify({ error: '잠시 후 다시 시도해주세요. (1분 5회 제한)' }), {
       status: 429, headers: { 'Content-Type': 'application/json' }
     });
