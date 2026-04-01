@@ -131,7 +131,34 @@ export default async function handler(req) {
     if (answer) break;
   }
 
-  // ─── 모든 모델 실패 시 안내 메시지 ────────────────────────
+  // ─── Groq 전부 실패 시 Claude Haiku 폴백 ─────────────────
+  if (!answer) {
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    if (anthropicKey) {
+      try {
+        const t0 = Date.now();
+        const res = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5-20251001',
+            max_tokens: 150,
+            system: SYSTEM_PROMPT,
+            messages,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          answer = data.content?.[0]?.text ?? null;
+          usedModel = 'claude-haiku';
+          await logAiCall({ model: 'claude-haiku', success: true, ms: Date.now() - t0, tokens: data.usage?.input_tokens + data.usage?.output_tokens });
+        }
+      } catch (e) {
+        await logAiCall({ model: 'claude-haiku', success: false, ms: 0, error: e.message });
+      }
+    }
+  }
+
   if (!answer) {
     answer = 'AI가 일시적으로 응답하지 못하고 있습니다. 잠시 후 다시 시도해주세요.';
   }

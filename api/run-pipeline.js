@@ -66,8 +66,28 @@ async function generateHooks(keywords) {
   return data.choices[0].message.content;
 }
 
-// ─── 14d: Claude 최종 완성 ───────────────────────────────
+// ─── 14d: 최종 완성 (Groq 우선 → 실패 시 Claude 폴백) ──────
 async function finalizeContent(keywords, hooks) {
+  const prompt = `키워드: ${keywords}\n\n훅 후보:\n${hooks}\n\n가장 강한 훅 1개 골라서 스레드 콘텐츠 완성:\n[훅 - 1줄]\n[본문 - 3~5줄, 짧고 강하게]\n[마무리 - 행동 유도 1줄]\n\n한국어, 소상공인/1인 창업자 타겟, 실용적이고 친근한 톤.`;
+
+  // 1차: Groq (무료)
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${GROQ_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 800,
+      }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data.choices[0].message.content;
+    }
+  } catch { /* Groq 실패 → Claude 폴백 */ }
+
+  // 2차: Claude Haiku (유료 폴백)
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
@@ -78,10 +98,7 @@ async function finalizeContent(keywords, hooks) {
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 800,
-      messages: [{
-        role: 'user',
-        content: `키워드: ${keywords}\n\n훅 후보:\n${hooks}\n\n가장 강한 훅 1개 골라서 스레드 콘텐츠 완성:\n[훅 - 1줄]\n[본문 - 3~5줄, 짧고 강하게]\n[마무리 - 행동 유도 1줄]\n\n한국어, 소상공인/1인 창업자 타겟, 실용적이고 친근한 톤.`,
-      }],
+      messages: [{ role: 'user', content: prompt }],
     }),
   });
   if (!res.ok) throw new Error(`Claude ${res.status}`);
