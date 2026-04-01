@@ -143,6 +143,29 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   border:1px solid rgba(139,92,246,.35);border-radius:6px;padding:.38rem .75rem;transition:color .2s,border-color .2s;}
 #login-btn:hover{color:#c4b5fd;border-color:#8b5cf6;}
 
+/* ─── 바텀 네비 ──────────────────────────────────────── */
+#bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  display:flex;height:60px;
+  background:rgba(0,0,10,.96);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid rgba(139,92,246,.3);
+}
+.bnav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;text-decoration:none;color:rgba(139,92,246,.55);
+  font-family:'Orbitron',sans-serif;transition:color .2s;position:relative;
+}
+.bnav-item:hover{color:rgba(196,181,253,.9);}
+.bnav-item.active{color:#fff;}
+.bnav-item.active::before{
+  content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:32px;height:2px;background:#8b5cf6;border-radius:0 0 4px 4px;
+  box-shadow:0 0 10px #8b5cf6;
+}
+.bnav-icon{font-size:1.2rem;line-height:1;}
+.bnav-text{font-size:.62rem;letter-spacing:.1em;font-weight:700;}
+
 /* 피드백 버튼 */
 #fb-btn{
   position:fixed;bottom:24px;right:24px;z-index:50;
@@ -271,6 +294,13 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
     <button id="ob-skip" onclick="obDone()">건너뛰기</button>
   </div>
 </div>
+
+<nav id="bottom-nav">
+  <a href="/" class="bnav-item active"><span class="bnav-icon">✦</span><span class="bnav-text">UNIVERSE</span></a>
+  <a href="/chat" class="bnav-item"><span class="bnav-icon">◎</span><span class="bnav-text">CHAT</span></a>
+  <a href="/project" class="bnav-item"><span class="bnav-icon">⬡</span><span class="bnav-text">PROJECT</span></a>
+  <a href="/budget" class="bnav-item"><span class="bnav-icon">◈</span><span class="bnav-text">BUDGET</span></a>
+</nav>
 
 <button id="fb-btn">FEEDBACK</button>
 <div id="fb-modal">
