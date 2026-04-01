@@ -42,19 +42,19 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   margin-top:10px;opacity:0;transition:opacity 1s ease;
 }
 #plv-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
-#plv-label{font-size:clamp(.28rem,.38vw,.34rem);letter-spacing:.2em;color:rgba(139,92,246,.5);}
-#plv-badge{font-size:clamp(.26rem,.35vw,.3rem);letter-spacing:.15em;
+#plv-label{font-size:clamp(.55rem,.6vw,.65rem);letter-spacing:.2em;color:rgba(167,139,250,.75);}
+#plv-badge{font-size:clamp(.52rem,.55vw,.58rem);letter-spacing:.15em;
   padding:.15rem .4rem;border-radius:4px;
   background:rgba(109,40,217,.2);border:1px solid rgba(139,92,246,.25);color:#c4b5fd;}
 #plv-bar-wrap{width:clamp(120px,10vw,160px);height:2px;background:rgba(139,92,246,.1);border-radius:1px;}
 #plv-bar{height:100%;width:0%;background:linear-gradient(90deg,#6d28d9,#a78bfa);
   border-radius:1px;transition:width .8s ease;box-shadow:0 0 4px #7c3aed;}
-#plv-sub{font-size:clamp(.24rem,.32vw,.28rem);letter-spacing:.12em;color:rgba(139,92,246,.3);margin-top:3px;}
+#plv-sub{font-size:clamp(.5rem,.52vw,.55rem);letter-spacing:.12em;color:rgba(167,139,250,.55);margin-top:3px;}
 
-/* 힌트 — 하단 중앙, 아주 작게 */
+/* 힌트 — 하단 중앙 */
 #hint{
-  position:fixed;bottom:28px;left:50%;transform:translateX(-50%);z-index:20;
-  font-size:clamp(.32rem,.45vw,.42rem);letter-spacing:.25em;color:rgba(255,255,255,.12);
+  position:fixed;bottom:72px;left:50%;transform:translateX(-50%);z-index:20;
+  font-size:clamp(.62rem,.65vw,.72rem);letter-spacing:.25em;color:rgba(255,255,255,.45);
   pointer-events:none;opacity:0;transition:opacity 1s ease;
 }
 
@@ -73,7 +73,7 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 
 /* 검색창 */
 #search-wrap{
-  position:fixed;bottom:55px;left:50%;transform:translateX(-50%);z-index:20;
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:20;
   display:flex;align-items:center;gap:8px;
   opacity:0;transition:opacity 1s ease;
 }
@@ -138,10 +138,12 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   color:#c4b5fd;font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.08em;
   padding:.32rem .6rem;border-radius:6px;cursor:pointer;white-space:nowrap;transition:background .2s;}
 #copy-btn:hover{background:rgba(109,40,217,.55);}
-#login-btn{font-family:'Orbitron',sans-serif;font-size:.8rem;letter-spacing:.15em;
-  color:rgba(167,139,250,.8);text-decoration:none;
-  border:1px solid rgba(139,92,246,.35);border-radius:6px;padding:.38rem .75rem;transition:color .2s,border-color .2s;}
-#login-btn:hover{color:#c4b5fd;border-color:#8b5cf6;}
+#login-btn{font-family:'Orbitron',sans-serif;font-size:.85rem;letter-spacing:.15em;
+  color:#fff;text-decoration:none;
+  background:linear-gradient(135deg,#5b21b6,#7c3aed);
+  border:none;border-radius:8px;padding:.45rem 1.1rem;
+  transition:opacity .2s;box-shadow:0 0 16px rgba(109,40,217,.4);}
+#login-btn:hover{opacity:.85;}
 
 /* ─── 바텀 네비 ──────────────────────────────────────── */
 #bottom-nav{
@@ -168,7 +170,7 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 
 /* 피드백 버튼 */
 #fb-btn{
-  position:fixed;bottom:24px;right:24px;z-index:50;
+  position:fixed;bottom:80px;right:24px;z-index:50;
   background:rgba(4,0,18,.85);border:1px solid rgba(139,92,246,.35);
   color:rgba(167,139,250,.8);font-family:'Orbitron',sans-serif;
   font-size:.8rem;letter-spacing:.12em;padding:.5rem 1rem;

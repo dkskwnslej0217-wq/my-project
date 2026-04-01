@@ -93,7 +93,6 @@ body{padding-bottom:80px;}
   <a href="/project" class="bnav-item"><span class="bnav-icon">⬡</span><span class="bnav-text">PROJECT</span></a>
   <a href="/budget" class="bnav-item active"><span class="bnav-icon">◈</span><span class="bnav-text">BUDGET</span></a>
 </nav>
-<a class="back" href="/">← NOVA UNIVERSE</a>
 
 <h1>TRANSPARENT BUDGET</h1>
 <p class="sub">NOVA의 수익과 비용을 투명하게 공개합니다</p>
@@ -205,7 +204,7 @@ async function load() {
 
 load().catch(() => {
   document.getElementById('content').innerHTML =
-    '<div class="loading">데이터 로드 실패. 잠시 후 다시 시도하세요.</div>';
+    '<div class="loading" style="display:flex;flex-direction:column;align-items:center;gap:1.2rem">데이터 로드 실패.<button onclick="load()" style="background:rgba(109,40,217,.3);border:1px solid rgba(139,92,246,.4);color:#c4b5fd;font-family:\'Orbitron\',sans-serif;font-size:.78rem;letter-spacing:.12em;padding:.5rem 1.2rem;border-radius:8px;cursor:pointer">다시 시도</button></div>';
 });
 </script>
 </body>

@@ -151,7 +151,7 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
 
 /* 퀘스트 보드 */
 #quest-section{margin-bottom:2.4rem;}
-#quest-grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;}
+#quest-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.7rem;}
 .quest-card{
   background:rgba(10,4,30,.7);border:1px solid rgba(139,92,246,.18);
   border-radius:12px;padding:1rem .9rem;position:relative;overflow:hidden;
@@ -306,8 +306,6 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
       <div id="top-name">MY PROJECT</div>
     </div>
     <div id="top-right">
-      <a href="/" class="nav-link">← UNIVERSE</a>
-      <a href="/chat" class="nav-link">CHAT</a>
     </div>
   </div>
 
