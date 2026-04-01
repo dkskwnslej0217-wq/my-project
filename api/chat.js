@@ -88,14 +88,19 @@ export default async function handler(req) {
     });
   }
 
-  const query = (body.query ?? '').trim();
+  const query = (body.message ?? body.query ?? '').trim();
   if (query.length < 2)
     return new Response(JSON.stringify({ error: '질문을 입력해주세요.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
   if (query.length > 300)
     return new Response(JSON.stringify({ error: '질문이 너무 깁니다. (300자 이내)' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
 
+  // 대화 히스토리 (최대 10개) + 시스템 프롬프트
+  const historyMsgs = Array.isArray(body.history)
+    ? body.history.slice(-10).map(m => ({ role: m.role, content: String(m.content).slice(0, 300) }))
+    : [];
   const messages = [
     { role: 'system', content: SYSTEM_PROMPT },
+    ...historyMsgs,
     { role: 'user', content: query },
   ];
 
@@ -131,7 +136,7 @@ export default async function handler(req) {
     answer = 'AI가 일시적으로 응답하지 못하고 있습니다. 잠시 후 다시 시도해주세요.';
   }
 
-  return new Response(JSON.stringify({ result: answer, model: usedModel }), {
+  return new Response(JSON.stringify({ reply: answer, model: usedModel }), {
     status: 200,
     headers: { 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff' },
   });

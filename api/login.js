@@ -21,7 +21,7 @@ export default async function handler(req) {
   )).map(b => b.toString(16).padStart(2, '0')).join('');
 
   const res = await fetch(
-    `${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=user_id,nickname,email,star_x,star_y,star_z,star_color,star_size,plan_type,invite_count`,
+    `${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=user_id,nickname,email,star_x,star_y,star_z,star_color,star_size,plan_type,invite_count,password_hash`,
     { headers }
   );
   const users = await res.json();
@@ -30,6 +30,11 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: '이메일 또는 비밀번호가 틀렸습니다.' }), { status: 401 });
 
   const user = users[0];
+
+  if (user.password_hash !== pwHash)
+    return new Response(JSON.stringify({ error: '이메일 또는 비밀번호가 틀렸습니다.' }), { status: 401 });
+
+  delete user.password_hash;
 
   // 별 성장 로직: invite_count → star_size 자동 갱신
   const ic = user.invite_count || 0;

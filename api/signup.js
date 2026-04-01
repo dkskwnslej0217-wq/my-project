@@ -63,6 +63,7 @@ export default async function handler(req) {
       user_id,
       email,
       nickname,
+      password_hash: pwHash,
       plan_type: 'free',
       plan: 'free',
       daily_count: 0,
