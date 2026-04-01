@@ -1,0 +1,54 @@
+name: NOVA Guard — 코드 보안·품질 자동 검사
+
+on:
+  push:
+    paths: ['api/**']
+  pull_request:
+    paths: ['api/**']
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: 보안 검사
+        run: |
+          ERRORS=0
+
+          # 1. async await 누락
+          MISSING=$(grep -rn "if (isRateLimited\|if (checkUsage\|if (checkAndIncrement" api/ | grep -v "await" || true)
+          if [ -n "$MISSING" ]; then
+            echo "❌ await 누락: $MISSING"
+            ERRORS=$((ERRORS+1))
+          fi
+
+          # 2. API 키 하드코딩
+          HARDCODED=$(grep -rn "sk-\|AIza" api/ | grep -v "process.env" | grep -v "//.*sk-" || true)
+          if [ -n "$HARDCODED" ]; then
+            echo "❌ API 키 하드코딩 의심: $HARDCODED"
+            ERRORS=$((ERRORS+1))
+          fi
+
+          # 3. Edge Runtime 위반
+          EDGE=$(grep -rn "require(\|^const fs\|__dirname" api/ || true)
+          if [ -n "$EDGE" ]; then
+            echo "❌ Edge Runtime 미지원 패턴: $EDGE"
+            ERRORS=$((ERRORS+1))
+          fi
+
+          # 4. export const config 누락
+          for f in api/*.js; do
+            if ! grep -q "runtime.*edge" "$f"; then
+              echo "⚠️ Edge config 누락: $f"
+            fi
+          done
+
+          if [ $ERRORS -gt 0 ]; then
+            echo "🚫 $ERRORS 개 문제 발견 — 배포 전 수정 필요"
+            exit 1
+          fi
+
+          echo "✅ 모든 검사 통과"
