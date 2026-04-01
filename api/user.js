@@ -5,7 +5,7 @@ export default async function handler(req) {
   if (!id) return new Response(JSON.stringify({ error: 'id required' }), { status: 400 });
 
   const res = await fetch(
-    `${process.env.SUPABASE_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(id)}&select=user_id,nickname,star_color,star_size,plan_type,invite_count`,
+    `${process.env.SUPABASE_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(id)}&select=user_id,nickname,star_color,star_size,plan_type,invite_count,daily_count`,
     { headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}` } }
   );
   const data = await res.json();

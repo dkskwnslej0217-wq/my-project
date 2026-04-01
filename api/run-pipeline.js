@@ -134,24 +134,27 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
-  // 매월 1일 → 사용량 자동 리셋
+  // 매일 → daily_count 리셋 / 매월 1일 → monthly_count 추가 리셋
   const today = new Date();
-  if (today.getDate() === 1) {
-    try {
-      await fetch(`${SUPA_URL}/rest/v1/users`, {
-        method: 'PATCH',
-        headers: {
-          'apikey': SUPA_KEY,
-          'Authorization': `Bearer ${SUPA_KEY}`,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=minimal',
-        },
-        body: JSON.stringify({ usage_count: 0 }),
-      });
-      await tg(`✅ 월 사용량 초기화 완료 (${today.toISOString().slice(0, 7)})`);
-    } catch(e) {
-      await tg(`⚠️ 월 초기화 실패\n${e.message}`);
-    }
+  try {
+    const dailyPatch = { daily_count: 0 };
+    if (today.getDate() === 1) dailyPatch.monthly_count = 0;
+    await fetch(`${SUPA_URL}/rest/v1/users`, {
+      method: 'PATCH',
+      headers: {
+        'apikey': SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify(dailyPatch),
+    });
+    const resetMsg = today.getDate() === 1
+      ? `✅ 일/월 사용량 초기화 완료 (${today.toISOString().slice(0, 7)})`
+      : `✅ 일 사용량 초기화 완료 (${today.toISOString().slice(0, 10)})`;
+    await tg(resetMsg);
+  } catch(e) {
+    await tg(`⚠️ 사용량 초기화 실패\n${e.message}`);
   }
 
   const startedAt = new Date().toISOString();

@@ -26,7 +26,7 @@ export default async function handler(req) {
   }
 
   try {
-    // users 테이블 usage_count 초기화
+    // users 테이블 monthly_count 초기화
     const res = await fetch(`${SUPA_URL}/rest/v1/users`, {
       method: 'PATCH',
       headers: {
@@ -35,13 +35,13 @@ export default async function handler(req) {
         'Content-Type': 'application/json',
         'Prefer': 'return=minimal',
       },
-      body: JSON.stringify({ usage_count: 0 }),
+      body: JSON.stringify({ monthly_count: 0 }),
     });
 
     if (!res.ok) throw new Error(`Supabase ${res.status}`);
 
     const month = new Date().toISOString().slice(0, 7);
-    await tg(`✅ 월 사용량 초기화 완료 (${month})\n전체 유저 usage_count → 0`);
+    await tg(`✅ 월 사용량 초기화 완료 (${month})\n전체 유저 monthly_count → 0`);
 
     return new Response(JSON.stringify({ ok: true, month }), {
       status: 200,

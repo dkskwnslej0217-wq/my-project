@@ -61,6 +61,36 @@ async function logAiCall({ model, success, ms, tokens, error }) {
   } catch { /* 로그 실패는 무시 — 본 응답에 영향 없음 */ }
 }
 
+// ─── 플랜별 일일 한도 ────────────────────────────────────
+const PLAN_LIMITS = { free: 5, starter: 50, pro: 300 };
+
+async function checkAndIncrementUsage(userId) {
+  const SUPA_URL = process.env.SUPABASE_URL;
+  const SUPA_KEY = process.env.SUPABASE_KEY;
+  const headers = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` };
+
+  const res = await fetch(
+    `${SUPA_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}&select=plan_type,daily_count`,
+    { headers }
+  );
+  const data = await res.json();
+  if (!data.length) return { ok: false, reason: 'user_not_found' };
+
+  const { plan_type, daily_count } = data[0];
+  const limit = PLAN_LIMITS[plan_type] ?? PLAN_LIMITS.free;
+  const count = daily_count ?? 0;
+
+  if (count >= limit) return { ok: false, reason: 'limit_exceeded', count, limit, plan_type };
+
+  await fetch(`${SUPA_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}`, {
+    method: 'PATCH',
+    headers: { ...headers, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+    body: JSON.stringify({ daily_count: count + 1 }),
+  });
+
+  return { ok: true, count: count + 1, limit, plan_type };
+}
+
 const SYSTEM_PROMPT = `당신은 NOVA UNIVERSE AI 어시스턴트입니다.
 소상공인, 1인 창업자, 콘텐츠 크리에이터가 AI로 비즈니스를 자동화하도록 돕습니다.
 질문에 대해 한국어로 2-3문장 이내로 핵심만 답하세요.
@@ -93,6 +123,23 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: '질문을 입력해주세요.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
   if (query.length > 300)
     return new Response(JSON.stringify({ error: '질문이 너무 깁니다. (300자 이내)' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+
+  // 사용량 체크 (user_id 있을 때만)
+  const userId = body.user_id ?? null;
+  let usageInfo = null;
+  if (userId) {
+    const usage = await checkAndIncrementUsage(userId);
+    if (!usage.ok) {
+      if (usage.reason === 'limit_exceeded') {
+        return new Response(JSON.stringify({
+          error: `오늘 사용량 한도(${usage.limit}회)를 초과했습니다. 내일 다시 이용해주세요.`,
+          limit_exceeded: true, count: usage.count, limit: usage.limit, plan_type: usage.plan_type
+        }), { status: 429, headers: { 'Content-Type': 'application/json' } });
+      }
+    } else {
+      usageInfo = { count: usage.count, limit: usage.limit, plan_type: usage.plan_type };
+    }
+  }
 
   // 대화 히스토리 (최대 10개) + 시스템 프롬프트
   const historyMsgs = Array.isArray(body.history)
@@ -163,7 +210,7 @@ export default async function handler(req) {
     answer = 'AI가 일시적으로 응답하지 못하고 있습니다. 잠시 후 다시 시도해주세요.';
   }
 
-  return new Response(JSON.stringify({ reply: answer, model: usedModel }), {
+  return new Response(JSON.stringify({ reply: answer, model: usedModel, usage: usageInfo }), {
     status: 200,
     headers: { 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff' },
   });

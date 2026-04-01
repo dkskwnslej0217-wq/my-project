@@ -219,6 +219,13 @@ function addMsg(role, text) {
   badge.textContent = (profile.plan_type || 'free').toUpperCase();
   if (profile.plan_type === 'pro') badge.classList.add('pro');
 
+  // 초기 limit-bar
+  if (isOwner && profile.daily_count !== undefined) {
+    const limits = { free: 5, starter: 50, pro: 300 };
+    const lim = limits[profile.plan_type] ?? 5;
+    updateLimitBar(profile.daily_count ?? 0, lim);
+  }
+
   if (!isOwner) {
     // 타인 프로필 뷰
     document.getElementById('messages').style.display = 'none';
@@ -235,6 +242,15 @@ function addMsg(role, text) {
     document.getElementById('stat-invites').textContent = profile.invite_count || 0;
     document.getElementById('stat-size').textContent = profile.star_size || '1.0';
     return;
+  }
+
+  // limit-bar 업데이트
+  function updateLimitBar(count, limit) {
+    document.getElementById('limit-text').textContent = '오늘 사용량';
+    const remaining = Math.max(0, limit - count);
+    const el = document.getElementById('limit-count');
+    el.textContent = `${count} / ${limit}회`;
+    el.style.color = remaining === 0 ? '#f87171' : remaining <= 2 ? '#fbbf24' : 'rgba(139,92,246,.5)';
   }
 
   // 본인 워크스페이스 — 히스토리 로드
@@ -261,13 +277,13 @@ function addMsg(role, text) {
   });
   sendBtn.onclick = send;
 
+  let limitReached = false;
+
   async function send() {
     const text = inputEl.value.trim();
-    if (!text) return;
+    if (!text || limitReached) return;
     inputEl.value = ''; inputEl.style.height = 'auto';
     sendBtn.disabled = true;
-    addMsg('user', text);
-    conversationHistory.push({ role: 'user', content: text });
 
     typingEl.classList.add('show');
     messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -276,15 +292,28 @@ function addMsg(role, text) {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history: conversationHistory.slice(-10) })
+        body: JSON.stringify({ message: text, history: conversationHistory.slice(-10), user_id: me?.user_id ?? null })
       });
       const data = await res.json();
-      const reply = data.reply || data.error || '응답을 받지 못했어요.';
-      conversationHistory.push({ role: 'assistant', content: reply });
       typingEl.classList.remove('show');
-      addMsg('nova', reply);
 
-      // Supabase에 저장
+      if (data.limit_exceeded) {
+        updateLimitBar(data.count, data.limit);
+        addMsg('nova', data.error);
+        limitReached = true;
+        inputEl.disabled = true;
+        return;
+      }
+
+      if (data.usage) updateLimitBar(data.usage.count, data.usage.limit);
+      const reply = data.reply || data.error || '응답을 받지 못했어요.';
+
+      // 성공 시에만 히스토리 기록
+      addMsg('user', text);
+      conversationHistory.push({ role: 'user', content: text });
+      addMsg('nova', reply);
+      conversationHistory.push({ role: 'assistant', content: reply });
+
       await saveMsg('user', text);
       await saveMsg('assistant', reply);
     } catch {
