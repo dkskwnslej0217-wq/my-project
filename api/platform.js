@@ -2,7 +2,7 @@
 export const config = { runtime: 'edge' };
 
 const SUPA_URL = process.env.SUPABASE_URL;
-const SUPA_KEY = process.env.SUPABASE_KEY;
+const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 const PIPELINE_SECRET = process.env.PIPELINE_SECRET;
 
 const LEVEL_CONFIG = [

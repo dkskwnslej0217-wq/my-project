@@ -6,7 +6,7 @@ export default async function handler(req) {
 
   const res = await fetch(
     `${process.env.SUPABASE_URL}/rest/v1/users?nickname=ilike.${encodeURIComponent(nickname)}&select=user_id,nickname,star_x,star_y,star_z,star_color,star_size&limit=1`,
-    { headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}` } }
+    { headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}` } }
   );
   const data = await res.json();
   if (!data.length) return new Response(JSON.stringify({ error: 'not found' }), { status: 404 });

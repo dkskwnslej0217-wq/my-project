@@ -13,12 +13,8 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: '이메일과 비밀번호를 입력해주세요.' }), { status: 400 });
 
   const SUPA_URL = process.env.SUPABASE_URL;
-  const SUPA_KEY = process.env.SUPABASE_KEY;
+  const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
   const headers = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` };
-
-  const pwHash = Array.from(new Uint8Array(
-    await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password + 'nova_salt_2026'))
-  )).map(b => b.toString(16).padStart(2, '0')).join('');
 
   const res = await fetch(
     `${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=user_id,nickname,email,star_x,star_y,star_z,star_color,star_size,plan_type,invite_count,password_hash`,
@@ -30,8 +26,38 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: '이메일 또는 비밀번호가 틀렸습니다.' }), { status: 401 });
 
   const user = users[0];
+  const stored = user.password_hash || '';
+  let passwordValid = false;
 
-  if (user.password_hash !== pwHash)
+  if (stored.startsWith('pbkdf2:')) {
+    // PBKDF2 검증
+    const [, saltHex, hashHex] = stored.split(':');
+    const salt = new Uint8Array(saltHex.match(/.{2}/g).map(b => parseInt(b, 16)));
+    const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, km, 256);
+    const check = Array.from(new Uint8Array(bits)).map(b => b.toString(16).padStart(2, '0')).join('');
+    passwordValid = check === hashHex;
+  } else {
+    // 레거시 SHA-256 검증 후 자동 PBKDF2 업그레이드
+    const legacyHash = Array.from(new Uint8Array(
+      await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password + 'nova_salt_2026'))
+    )).map(b => b.toString(16).padStart(2, '0')).join('');
+    passwordValid = legacyHash === stored;
+    if (passwordValid) {
+      const saltBytes = crypto.getRandomValues(new Uint8Array(16));
+      const km2 = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+      const bits2 = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: saltBytes, iterations: 100000, hash: 'SHA-256' }, km2, 256);
+      const s2 = Array.from(saltBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+      const h2 = Array.from(new Uint8Array(bits2)).map(b => b.toString(16).padStart(2, '0')).join('');
+      fetch(`${SUPA_URL}/rest/v1/users?user_id=eq.${user.user_id}`, {
+        method: 'PATCH',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password_hash: `pbkdf2:${s2}:${h2}` })
+      }).catch(() => {});
+    }
+  }
+
+  if (!passwordValid)
     return new Response(JSON.stringify({ error: '이메일 또는 비밀번호가 틀렸습니다.' }), { status: 401 });
 
   delete user.password_hash;

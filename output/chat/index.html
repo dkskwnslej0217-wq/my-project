@@ -21,15 +21,15 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
 #user-orb{width:32px;height:32px;border-radius:50%;flex-shrink:0;
   box-shadow:0 0 16px rgba(139,92,246,.6);animation:pulse 3s ease-in-out infinite;}
 @keyframes pulse{0%,100%{box-shadow:0 0 16px rgba(139,92,246,.6);}50%{box-shadow:0 0 28px rgba(167,139,250,.9),0 0 50px rgba(109,40,217,.4);}}
-#header-title{font-size:.65rem;font-weight:900;letter-spacing:.25em;color:#fff;text-shadow:0 0 20px #7c3aed;}
-#header-sub{font-size:.34rem;letter-spacing:.3em;color:rgba(167,139,250,.45);margin-top:2px;}
+#header-title{font-size:1rem;font-weight:900;letter-spacing:.25em;color:#fff;text-shadow:0 0 20px #7c3aed;}
+#header-sub{font-size:.7rem;letter-spacing:.2em;color:rgba(196,181,253,.8);margin-top:2px;}
 #header-right{display:flex;align-items:center;gap:.8rem;}
-#plan-badge{font-size:.32rem;letter-spacing:.15em;padding:.22rem .55rem;border-radius:20px;
-  border:1px solid rgba(139,92,246,.3);color:rgba(167,139,250,.7);}
-#plan-badge.pro{border-color:rgba(251,191,36,.4);color:rgba(251,191,36,.8);}
-#back-btn{font-size:.36rem;letter-spacing:.2em;color:rgba(139,92,246,.5);
-  text-decoration:none;border:1px solid rgba(139,92,246,.2);border-radius:6px;
-  padding:.28rem .6rem;transition:color .2s,border-color .2s;}
+#plan-badge{font-size:.7rem;letter-spacing:.15em;padding:.3rem .7rem;border-radius:20px;
+  border:1px solid rgba(139,92,246,.5);color:rgba(196,181,253,.9);}
+#plan-badge.pro{border-color:rgba(251,191,36,.6);color:rgba(251,191,36,.95);}
+#back-btn{font-size:.75rem;letter-spacing:.15em;color:rgba(167,139,250,.8);
+  text-decoration:none;border:1px solid rgba(139,92,246,.35);border-radius:6px;
+  padding:.35rem .75rem;transition:color .2s,border-color .2s;}
 #back-btn:hover{color:#c4b5fd;border-color:#8b5cf6;}
 
 /* 타인 프로필 뷰 */
@@ -38,12 +38,12 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
   padding:2rem;
 }
 #profile-orb{width:80px;height:80px;border-radius:50%;animation:pulse 3s ease-in-out infinite;}
-#profile-name{font-size:1.1rem;font-weight:900;letter-spacing:.3em;color:#fff;text-shadow:0 0 20px #7c3aed;}
+#profile-name{font-size:1.4rem;font-weight:900;letter-spacing:.3em;color:#fff;text-shadow:0 0 20px #7c3aed;}
 #profile-stats{display:flex;gap:2rem;}
 .stat{text-align:center;}
-.stat-val{font-size:.7rem;font-weight:700;color:#c4b5fd;}
-.stat-label{font-size:.32rem;letter-spacing:.2em;color:rgba(167,139,250,.4);margin-top:.3rem;}
-#profile-note{font-size:.38rem;letter-spacing:.15em;color:rgba(139,92,246,.4);margin-top:.5rem;}
+.stat-val{font-size:.95rem;font-weight:700;color:#c4b5fd;}
+.stat-label{font-size:.7rem;letter-spacing:.18em;color:rgba(196,181,253,.75);margin-top:.3rem;}
+#profile-note{font-size:.8rem;letter-spacing:.1em;color:rgba(167,139,250,.7);margin-top:.5rem;}
 
 /* 메시지 영역 */
 #messages{flex:1;overflow-y:auto;padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:.8rem;}
@@ -56,7 +56,7 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
 .msg-avatar{width:28px;height:28px;border-radius:50%;flex-shrink:0;margin-top:2px;}
 .msg-avatar.nova{background:radial-gradient(circle at 35% 35%,#c4b5fd,#7c3aed,#312e81);box-shadow:0 0 10px rgba(139,92,246,.5);}
 .msg-avatar.user-av{background:rgba(139,92,246,.3);border:1px solid rgba(139,92,246,.4);}
-.msg-bubble{padding:.6rem .85rem;border-radius:12px;font-size:.48rem;line-height:1.8;letter-spacing:.04em;}
+.msg-bubble{padding:.7rem 1rem;border-radius:12px;font-size:.95rem;line-height:1.8;letter-spacing:.02em;}
 .msg.nova .msg-bubble{background:rgba(109,40,217,.18);border:1px solid rgba(139,92,246,.18);color:rgba(255,255,255,.88);border-top-left-radius:2px;}
 .msg.user .msg-bubble{background:rgba(139,92,246,.25);border:1px solid rgba(167,139,250,.25);color:#fff;border-top-right-radius:2px;}
 
@@ -70,11 +70,11 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
 /* 입력창 */
 #input-area{padding:.8rem 1.4rem;border-top:1px solid rgba(139,92,246,.1);background:rgba(0,0,8,.75);backdrop-filter:blur(12px);flex-shrink:0;}
 #input-row{display:flex;gap:.6rem;align-items:flex-end;}
-#input{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(139,92,246,.25);border-radius:12px;
-  color:#fff;font-family:'Orbitron',sans-serif;font-size:.48rem;letter-spacing:.05em;
-  padding:.6rem .9rem;outline:none;resize:none;max-height:100px;transition:border-color .2s;line-height:1.6;}
-#input:focus{border-color:rgba(167,139,250,.5);}
-#input::placeholder{color:rgba(255,255,255,.2);}
+#input{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(139,92,246,.35);border-radius:12px;
+  color:#fff;font-family:'Orbitron',sans-serif;font-size:.9rem;letter-spacing:.03em;
+  padding:.7rem 1rem;outline:none;resize:none;max-height:120px;transition:border-color .2s;line-height:1.6;}
+#input:focus{border-color:rgba(167,139,250,.7);}
+#input::placeholder{color:rgba(255,255,255,.4);}
 #send-btn{background:linear-gradient(135deg,#5b21b6,#7c3aed);border:none;border-radius:10px;
   width:38px;height:38px;cursor:pointer;display:flex;align-items:center;justify-content:center;
   flex-shrink:0;transition:opacity .2s;box-shadow:0 0 14px rgba(109,40,217,.4);}
@@ -83,10 +83,93 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
 
 /* 한도 표시 */
 #limit-bar{display:flex;align-items:center;justify-content:space-between;
-  padding:.3rem 1.4rem;font-size:.32rem;letter-spacing:.15em;color:rgba(139,92,246,.4);}
+  padding:.4rem 1.4rem;font-size:.75rem;letter-spacing:.1em;color:rgba(167,139,250,.75);}
+
+/* 업그레이드 배너 */
+#upgrade-bar{
+  display:none;align-items:center;justify-content:space-between;
+  padding:.55rem 1.4rem;
+  background:linear-gradient(90deg,rgba(109,40,217,.18),rgba(79,70,229,.12));
+  border-top:1px solid rgba(139,92,246,.2);
+}
+#upgrade-bar.show{display:flex;}
+#upgrade-msg{font-size:.85rem;letter-spacing:.08em;color:rgba(196,181,253,.9);}
+#upgrade-btn{
+  font-size:.85rem;letter-spacing:.08em;font-weight:700;
+  padding:.35rem .9rem;border-radius:20px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff;
+  font-family:'Orbitron',sans-serif;white-space:nowrap;
+  transition:opacity .2s;box-shadow:0 0 12px rgba(109,40,217,.4);
+}
+#upgrade-btn:hover{opacity:.85;}
+
+/* 업그레이드 모달 */
+#upgrade-modal{
+  display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,8,.85);backdrop-filter:blur(10px);
+  align-items:center;justify-content:center;
+}
+#upgrade-modal.open{display:flex;}
+#upgrade-box{
+  width:min(92vw,440px);
+  background:rgba(6,1,22,0.98);
+  border:1px solid rgba(139,92,246,.3);
+  border-radius:20px;padding:2.2rem 1.8rem 1.8rem;
+  font-family:'Orbitron',sans-serif;
+}
+#upgrade-box h2{font-size:1.3rem;font-weight:900;letter-spacing:.2em;color:#fff;
+  text-align:center;margin-bottom:.4rem;text-shadow:0 0 20px #7c3aed;}
+#upgrade-box p{font-size:.85rem;letter-spacing:.08em;color:rgba(196,181,253,.8);
+  text-align:center;margin-bottom:1.6rem;}
+.plan-row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1.2rem;}
+.plan-card{border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:1.1rem .9rem;text-align:center;}
+.plan-card.hot{border-color:#7c3aed;background:rgba(109,40,217,.1);}
+.plan-name{font-size:.9rem;letter-spacing:.15em;color:#c4b5fd;margin-bottom:.4rem;}
+.plan-price{font-size:1.3rem;font-weight:900;color:#fff;margin-bottom:.5rem;}
+.plan-limit{font-size:.8rem;color:rgba(196,181,253,.75);letter-spacing:.05em;line-height:1.8;}
+.plan-hot-badge{font-size:.7rem;letter-spacing:.08em;
+  background:#7c3aed;color:#fff;padding:.15rem .6rem;border-radius:10px;
+  display:inline-block;margin-bottom:.4rem;}
+#upgrade-contact{
+  width:100%;background:linear-gradient(135deg,#5b21b6,#7c3aed);
+  border:none;border-radius:10px;color:#fff;
+  font-family:'Orbitron',sans-serif;font-size:1rem;
+  font-weight:700;letter-spacing:.1em;padding:.85rem;cursor:pointer;
+  transition:opacity .2s;margin-bottom:.6rem;
+}
+#upgrade-contact:hover{opacity:.85;}
+#upgrade-close{
+  width:100%;background:none;border:none;
+  color:rgba(167,139,250,.6);font-family:'Orbitron',sans-serif;
+  font-size:.8rem;letter-spacing:.08em;cursor:pointer;padding:.3rem;
+}
+#upgrade-close:hover{color:rgba(196,181,253,.9);}
 </style>
 </head>
 <body>
+<!-- 업그레이드 모달 -->
+<div id="upgrade-modal">
+  <div id="upgrade-box">
+    <h2>플랜 업그레이드</h2>
+    <p>더 많은 대화를 원하신다면</p>
+    <div class="plan-row">
+      <div class="plan-card">
+        <div class="plan-name">STARTER</div>
+        <div class="plan-price">₩4,900<span style="font-size:.38rem;color:rgba(167,139,250,.4)">/월</span></div>
+        <div class="plan-limit">50회/일<br>기본 AI 모델</div>
+      </div>
+      <div class="plan-card hot">
+        <div class="plan-hot-badge">POPULAR</div>
+        <div class="plan-name">PRO</div>
+        <div class="plan-price">₩14,900<span style="font-size:.38rem;color:rgba(167,139,250,.4)">/월</span></div>
+        <div class="plan-limit">300회/일<br>최상위 AI 모델</div>
+      </div>
+    </div>
+    <button id="upgrade-contact" onclick="contactUpgrade()">구매 문의하기 →</button>
+    <button id="upgrade-close" onclick="closeUpgrade()">나중에 할게요</button>
+  </div>
+</div>
+
 <canvas id="bg"></canvas>
 <div id="app">
   <div id="header">
@@ -125,6 +208,10 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
     <span id="limit-text"></span>
     <span id="limit-count"></span>
   </div>
+  <div id="upgrade-bar">
+    <span id="upgrade-msg">오늘 대화 한도에 도달했어요</span>
+    <button id="upgrade-btn" onclick="openUpgrade()">플랜 업그레이드 →</button>
+  </div>
   <div id="input-area">
     <div id="input-row">
       <textarea id="input" placeholder="NOVA에게 물어보세요..." rows="1"></textarea>
@@ -136,6 +223,18 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
 </div>
 
 <script>
+// ─── 업그레이드 모달 ──────────────────────────────────
+function openUpgrade(){ document.getElementById('upgrade-modal').classList.add('open'); }
+function closeUpgrade(){ document.getElementById('upgrade-modal').classList.remove('open'); }
+function contactUpgrade(){
+  const me = (() => { try { return JSON.parse(localStorage.getItem('nova_user')); } catch { return null; } })();
+  const nick = me?.nickname || '';
+  window.open('mailto:contact@nova-universe.ai?subject=플랜%20업그레이드%20문의&body=닉네임:%20' + encodeURIComponent(nick), '_blank');
+}
+document.addEventListener('click', e => {
+  if (e.target === document.getElementById('upgrade-modal')) closeUpgrade();
+});
+
 // ─── 배경 별 ───────────────────────────────────────────
 (function(){
   const c=document.getElementById('bg'),ctx=c.getContext('2d');
@@ -302,6 +401,8 @@ function addMsg(role, text) {
         addMsg('nova', data.error);
         limitReached = true;
         inputEl.disabled = true;
+        sendBtn.disabled = true;
+        document.getElementById('upgrade-bar').classList.add('show');
         return;
       }
 

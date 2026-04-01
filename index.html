@@ -78,15 +78,15 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   opacity:0;transition:opacity 1s ease;
 }
 #search-input{
-  background:rgba(4,0,18,.88);border:1px solid rgba(139,92,246,.2);
+  background:rgba(4,0,18,.88);border:1px solid rgba(139,92,246,.3);
   border-radius:20px;color:#fff;font-family:'Orbitron',sans-serif;
-  font-size:.38rem;letter-spacing:.12em;padding:.38rem 1rem;
-  outline:none;width:170px;transition:border-color .2s,width .3s;
+  font-size:.8rem;letter-spacing:.08em;padding:.45rem 1rem;
+  outline:none;width:185px;transition:border-color .2s,width .3s;
 }
-#search-input:focus{border-color:rgba(139,92,246,.5);width:210px;}
-#search-input::placeholder{color:rgba(255,255,255,.18);}
-#search-msg{font-family:'Orbitron',sans-serif;font-size:.36rem;
-  letter-spacing:.1em;color:rgba(139,92,246,.6);white-space:nowrap;}
+#search-input:focus{border-color:rgba(139,92,246,.6);width:230px;}
+#search-input::placeholder{color:rgba(255,255,255,.45);}
+#search-msg{font-family:'Orbitron',sans-serif;font-size:.75rem;
+  letter-spacing:.08em;color:rgba(167,139,250,.85);white-space:nowrap;}
 
 /* 행성 라벨 */
 .planet-label{
@@ -94,15 +94,15 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   transform:translate(-50%,-50%);text-align:center;cursor:pointer;
 }
 .planet-label .name{
-  font-size:clamp(.42rem,.6vw,.58rem);font-weight:700;
-  letter-spacing:.18em;text-transform:uppercase;
+  font-size:clamp(.75rem,.9vw,.95rem);font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;
   text-shadow:0 0 12px currentColor;display:block;
   font-family:'Orbitron',sans-serif;transition:text-shadow .2s;
 }
 .planet-label:hover .name{text-shadow:0 0 24px currentColor,0 0 40px currentColor;}
 .planet-label .tag{
-  font-size:clamp(.28rem,.38vw,.36rem);
-  color:rgba(255,255,255,.22);letter-spacing:.12em;
+  font-size:clamp(.6rem,.65vw,.72rem);
+  color:rgba(255,255,255,.55);letter-spacing:.08em;
   font-family:'Orbitron',sans-serif;margin-top:3px;display:block;
 }
 
@@ -110,13 +110,13 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 #tooltip{
   position:fixed;z-index:50;pointer-events:none;
   background:rgba(4,0,18,0.96);
-  border:1px solid rgba(139,92,246,0.25);
-  border-radius:12px;padding:.8rem 1.1rem;
-  font-family:'Orbitron',sans-serif;max-width:200px;display:none;
-  box-shadow:0 0 30px rgba(109,40,217,.15);
+  border:1px solid rgba(139,92,246,0.35);
+  border-radius:12px;padding:.9rem 1.2rem;
+  font-family:'Orbitron',sans-serif;max-width:220px;display:none;
+  box-shadow:0 0 30px rgba(109,40,217,.2);
 }
-#tooltip-name{font-size:.58rem;font-weight:700;color:#fff;letter-spacing:.1em;margin-bottom:.35rem;}
-#tooltip-desc{font-size:.48rem;color:rgba(139,92,246,.65);line-height:1.8;letter-spacing:.04em;}
+#tooltip-name{font-size:.9rem;font-weight:700;color:#fff;letter-spacing:.08em;margin-bottom:.4rem;}
+#tooltip-desc{font-size:.8rem;color:rgba(196,181,253,.85);line-height:1.8;letter-spacing:.03em;}
 
 /* 워프 */
 #warp{position:fixed;inset:0;z-index:100;pointer-events:none;
@@ -129,30 +129,66 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   display:flex;align-items:center;gap:10px;
   opacity:0;transition:opacity 1s ease;font-family:'Orbitron',sans-serif;
 }
-#user-nickname{font-size:clamp(.38rem,.52vw,.48rem);letter-spacing:.18em;color:rgba(255,255,255,.65);}
+#user-nickname{font-size:clamp(.75rem,.85vw,.9rem);letter-spacing:.12em;color:rgba(255,255,255,.9);}
 #invite-wrap{display:none;align-items:center;gap:6px;}
-#invite-link{background:rgba(255,255,255,.03);border:1px solid rgba(139,92,246,.18);
-  border-radius:6px;color:rgba(139,92,246,.55);font-family:'Orbitron',sans-serif;
-  font-size:.36rem;letter-spacing:.08em;padding:.28rem .45rem;width:150px;outline:none;}
-#copy-btn{background:rgba(109,40,217,.25);border:1px solid rgba(139,92,246,.3);
-  color:#c4b5fd;font-family:'Orbitron',sans-serif;font-size:.36rem;letter-spacing:.1em;
-  padding:.28rem .55rem;border-radius:6px;cursor:pointer;white-space:nowrap;transition:background .2s;}
-#copy-btn:hover{background:rgba(109,40,217,.5);}
-#login-btn{font-family:'Orbitron',sans-serif;font-size:.4rem;letter-spacing:.2em;
-  color:rgba(139,92,246,.55);text-decoration:none;
-  border:1px solid rgba(139,92,246,.18);border-radius:6px;padding:.32rem .65rem;transition:color .2s,border-color .2s;}
+#invite-link{background:rgba(255,255,255,.05);border:1px solid rgba(139,92,246,.3);
+  border-radius:6px;color:rgba(196,181,253,.8);font-family:'Orbitron',sans-serif;
+  font-size:.72rem;letter-spacing:.06em;padding:.32rem .5rem;width:165px;outline:none;}
+#copy-btn{background:rgba(109,40,217,.3);border:1px solid rgba(139,92,246,.4);
+  color:#c4b5fd;font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.08em;
+  padding:.32rem .6rem;border-radius:6px;cursor:pointer;white-space:nowrap;transition:background .2s;}
+#copy-btn:hover{background:rgba(109,40,217,.55);}
+#login-btn{font-family:'Orbitron',sans-serif;font-size:.8rem;letter-spacing:.15em;
+  color:rgba(167,139,250,.8);text-decoration:none;
+  border:1px solid rgba(139,92,246,.35);border-radius:6px;padding:.38rem .75rem;transition:color .2s,border-color .2s;}
 #login-btn:hover{color:#c4b5fd;border-color:#8b5cf6;}
 
 /* 피드백 버튼 */
 #fb-btn{
   position:fixed;bottom:24px;right:24px;z-index:50;
-  background:rgba(4,0,18,.85);border:1px solid rgba(139,92,246,.2);
-  color:rgba(139,92,246,.5);font-family:'Orbitron',sans-serif;
-  font-size:.42rem;letter-spacing:.18em;padding:.45rem .85rem;
+  background:rgba(4,0,18,.85);border:1px solid rgba(139,92,246,.35);
+  color:rgba(167,139,250,.8);font-family:'Orbitron',sans-serif;
+  font-size:.8rem;letter-spacing:.12em;padding:.5rem 1rem;
   border-radius:20px;cursor:pointer;pointer-events:all;
   transition:border-color .2s,color .2s;
 }
 #fb-btn:hover{border-color:#8b5cf6;color:#c4b5fd;}
+
+/* 온보딩 모달 */
+#onboard{display:none;position:fixed;inset:0;z-index:180;
+  background:rgba(0,0,8,.88);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;}
+#onboard.open{display:flex;}
+#ob-box{
+  width:min(92vw,420px);
+  background:rgba(6,1,20,0.97);
+  border:1px solid rgba(139,92,246,.3);
+  border-radius:20px;padding:2.4rem 2rem 2rem;
+  font-family:'Orbitron',sans-serif;position:relative;
+}
+#ob-step-dots{display:flex;gap:.45rem;justify-content:center;margin-bottom:1.6rem;}
+.ob-dot{width:6px;height:6px;border-radius:50%;background:rgba(139,92,246,.25);transition:.3s;}
+.ob-dot.active{background:#8b5cf6;box-shadow:0 0 8px #7c3aed;}
+#ob-icon{font-size:2.2rem;text-align:center;margin-bottom:.9rem;}
+#ob-title{font-size:1.3rem;font-weight:900;letter-spacing:.2em;color:#fff;
+  text-align:center;margin-bottom:.7rem;text-shadow:0 0 20px #7c3aed;}
+#ob-desc{font-size:.9rem;letter-spacing:.06em;color:rgba(196,181,253,.85);
+  text-align:center;line-height:2;margin-bottom:1.8rem;}
+#ob-next{
+  width:100%;background:linear-gradient(135deg,#5b21b6,#7c3aed);
+  border:none;border-radius:10px;color:#fff;
+  font-family:'Orbitron',sans-serif;font-size:1rem;
+  font-weight:700;letter-spacing:.12em;padding:.85rem;cursor:pointer;
+  transition:opacity .2s;
+}
+#ob-next:hover{opacity:.85;}
+#ob-skip{
+  width:100%;background:none;border:none;
+  color:rgba(167,139,250,.6);font-family:'Orbitron',sans-serif;
+  font-size:.8rem;letter-spacing:.08em;cursor:pointer;
+  padding:.5rem;margin-top:.4rem;
+}
+#ob-skip:hover{color:rgba(196,181,253,.9);}
 
 /* 피드백 모달 */
 #fb-modal{display:none;position:fixed;inset:0;z-index:150;
@@ -160,20 +196,20 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 #fb-modal.open{display:flex;}
 #fb-box{background:#060112;border:1px solid rgba(139,92,246,.25);
   border-radius:14px;padding:2rem;width:min(90vw,360px);font-family:'Orbitron',sans-serif;}
-#fb-box h3{font-size:.65rem;letter-spacing:.2em;color:#fff;margin-bottom:1.2rem;}
-#fb-issue{width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(139,92,246,.18);
-  border-radius:8px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.5rem;
-  letter-spacing:.07em;padding:.7rem;resize:none;height:80px;outline:none;margin-bottom:.7rem;}
-#fb-cat{width:100%;background:rgba(255,255,255,.03);border:1px solid rgba(139,92,246,.18);
-  border-radius:8px;color:#8b5cf6;font-family:'Orbitron',sans-serif;font-size:.5rem;
-  letter-spacing:.07em;padding:.55rem;outline:none;margin-bottom:1.1rem;cursor:pointer;}
+#fb-box h3{font-size:1rem;letter-spacing:.15em;color:#fff;margin-bottom:1.2rem;}
+#fb-issue{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(139,92,246,.3);
+  border-radius:8px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.85rem;
+  letter-spacing:.04em;padding:.75rem;resize:none;height:90px;outline:none;margin-bottom:.7rem;}
+#fb-cat{width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(139,92,246,.3);
+  border-radius:8px;color:#c4b5fd;font-family:'Orbitron',sans-serif;font-size:.85rem;
+  letter-spacing:.04em;padding:.6rem;outline:none;margin-bottom:1.1rem;cursor:pointer;}
 #fb-cat option{background:#060112;}
 .fb-row{display:flex;gap:.6rem;}
-.fb-btn-s{flex:1;padding:.55rem;border-radius:8px;font-family:'Orbitron',sans-serif;
-  font-size:.44rem;letter-spacing:.12em;cursor:pointer;border:none;}
-#fb-cancel{background:rgba(255,255,255,.05);color:rgba(139,92,246,.5);}
+.fb-btn-s{flex:1;padding:.6rem;border-radius:8px;font-family:'Orbitron',sans-serif;
+  font-size:.85rem;letter-spacing:.08em;cursor:pointer;border:none;}
+#fb-cancel{background:rgba(255,255,255,.06);color:rgba(167,139,250,.75);}
 #fb-send{background:linear-gradient(135deg,#4338ca,#7c3aed);color:#fff;}
-#fb-done{display:none;font-size:.5rem;letter-spacing:.1em;color:#8b5cf6;text-align:center;margin-top:.7rem;}
+#fb-done{display:none;font-size:.85rem;letter-spacing:.08em;color:#c4b5fd;text-align:center;margin-top:.7rem;}
 </style>
 </head>
 <body>
@@ -216,6 +252,23 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   <div id="invite-wrap">
     <input id="invite-link" type="text" readonly/>
     <button id="copy-btn">SHARE ✦</button>
+  </div>
+</div>
+
+<!-- 온보딩 모달 -->
+<div id="onboard">
+  <div id="ob-box">
+    <div id="ob-step-dots">
+      <div class="ob-dot active"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+      <div class="ob-dot"></div>
+    </div>
+    <div id="ob-icon"></div>
+    <div id="ob-title"></div>
+    <div id="ob-desc"></div>
+    <button id="ob-next" onclick="obNext()">다음 →</button>
+    <button id="ob-skip" onclick="obDone()">건너뛰기</button>
   </div>
 </div>
 
@@ -595,10 +648,23 @@ function updateLabels(){
   if(window._userStar){
     const wp=new THREE.Vector3(window._userStar.x,window._userStar.y,window._userStar.z);
     wp.project(camera);
-    if(wp.z>1){window._userStar.label.style.display='none';return;}
-    window._userStar.label.style.display='block';
-    window._userStar.label.style.left=((wp.x+1)/2*window.innerWidth)+'px';
-    window._userStar.label.style.top=((-wp.y+1)/2*window.innerHeight+20)+'px';
+    if(wp.z>1){window._userStar.label.style.display='none';}
+    else{
+      window._userStar.label.style.display='block';
+      window._userStar.label.style.left=((wp.x+1)/2*window.innerWidth)+'px';
+      window._userStar.label.style.top=((-wp.y+1)/2*window.innerHeight+20)+'px';
+    }
+  }
+  // 다른 유저 별 라벨
+  if(window._otherStars){
+    window._otherStars.forEach(s=>{
+      const wp=new THREE.Vector3(s.x,s.y,s.z);
+      wp.project(camera);
+      if(wp.z>1){s.label.style.display='none';return;}
+      s.label.style.display='block';
+      s.label.style.left=((wp.x+1)/2*window.innerWidth)+'px';
+      s.label.style.top=((-wp.y+1)/2*window.innerHeight+14)+'px';
+    });
   }
 }
 
@@ -739,7 +805,7 @@ animate();
   lbl.className='planet-label';
   lbl.style.cursor='default';
   lbl.style.pointerEvents='none';
-  lbl.innerHTML=`<span class="name" style="color:#fff;font-size:.48rem">✦ ${user.nickname}</span><span class="tag">MY STAR</span>`;
+  lbl.innerHTML=`<span class="name" style="color:#fff">✦ ${user.nickname}</span><span class="tag">MY STAR</span>`;
   document.body.appendChild(lbl);
 
   window._userStar={mesh,glow,light,label:lbl,x:ux,y:0,z:uz,userId:user.user_id};
@@ -750,6 +816,46 @@ animate();
   lbl.onclick=()=>{ location.href='/chat?id='+user.user_id; };
 
   setTimeout(()=>panel.style.opacity='1',1500);
+})();
+
+// ─── 다른 유저 별 렌더링 ──────────────────────────────
+window._otherStars=[];
+(async function(){
+  const raw=localStorage.getItem('nova_user');
+  let myId=null;
+  try{myId=raw?JSON.parse(raw).user_id:null;}catch{}
+  try{
+    const res=await fetch('/api/users');
+    if(!res.ok)return;
+    const users=await res.json();
+    users.forEach(u=>{
+      if(u.user_id===myId)return;
+      const phase=((u.star_x||0)%(Math.PI*2)+Math.PI*2)%(Math.PI*2);
+      const ux=28*Math.cos(phase), uz=17*Math.sin(phase);
+      const col=parseInt((u.star_color||'#ffffff').replace('#',''),16);
+      const sSize=(u.star_size||1)*0.28;
+      const mesh=new THREE.Mesh(
+        new THREE.SphereGeometry(sSize,12,12),
+        new THREE.MeshBasicMaterial({color:col})
+      );
+      mesh.position.set(ux,0,uz);
+      scene.add(mesh);
+      const glow=new THREE.Mesh(
+        new THREE.SphereGeometry(sSize*3,12,12),
+        new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:0.09,side:THREE.BackSide})
+      );
+      glow.position.set(ux,0,uz);
+      scene.add(glow);
+      const colorHex='#'+col.toString(16).padStart(6,'0');
+      const lbl=document.createElement('div');
+      lbl.className='planet-label';
+      lbl.style.cursor='pointer';
+      lbl.innerHTML=`<span class="name" style="color:${colorHex}">✦ ${u.nickname}</span>`;
+      document.body.appendChild(lbl);
+      lbl.onclick=()=>{location.href='/chat?id='+u.user_id;};
+      window._otherStars.push({mesh,glow,label:lbl,x:ux,y:0,z:uz});
+    });
+  }catch{}
 })();
 
 // NOVA 라벨 표시 + 클릭
@@ -811,6 +917,81 @@ document.getElementById('fb-send').onclick=async()=>{
     document.getElementById('fb-issue').value='';
     document.getElementById('fb-done').style.display='none';},1500);
 };
+
+// ─── 온보딩 ──────────────────────────────────────────
+const OB_STEPS=[
+  {icon:'✦',  title:'당신의 별이 탄생했습니다',  type:'info',
+   desc:'NOVA UNIVERSE에 오신 걸 환영합니다.\n이 별은 당신만의 공간입니다.'},
+  {icon:'💬', title:'NOVA와 대화하세요',          type:'info',
+   desc:'별을 클릭하면 AI 어시스턴트 NOVA와\n1:1 대화를 시작할 수 있어요.'},
+  {icon:'🌟', title:'초대하면 별이 성장해요',      type:'info',
+   desc:'초대 링크로 친구를 데려올수록\n당신의 별이 커지고 밝아집니다.'},
+  {icon:'🚀', title:'어떤 걸 해결하고 싶으세요?', type:'input',
+   desc:'자유롭게 말씀해주세요. NOVA가 프로젝트를 만들어드려요.'},
+];
+let obStep=0;
+function obRender(){
+  const s=OB_STEPS[obStep];
+  document.getElementById('ob-icon').textContent=s.icon;
+  document.getElementById('ob-title').textContent=s.title;
+  document.getElementById('ob-desc').textContent=s.desc;
+  const isLast=obStep===OB_STEPS.length-1;
+  // 마지막 스텝: 입력 필드 표시
+  let inputHtml='';
+  if(s.type==='input'){
+    inputHtml=`<textarea id="ob-problem" placeholder="예: 매주 경쟁사 가격 체크가 귀찮아요&#10;예: 고객 문의에 매번 같은 답변을 해야 해요" style="width:100%;margin-bottom:.8rem;background:rgba(255,255,255,.05);border:1px solid rgba(139,92,246,.25);border-radius:8px;color:#fff;font-family:Orbitron,sans-serif;font-size:.44rem;letter-spacing:.05em;padding:.6rem .8rem;outline:none;resize:none;min-height:70px;line-height:1.8;" rows="3"></textarea>
+    <div id="ob-nova-reply" style="display:none;background:rgba(109,40,217,.12);border:1px solid rgba(139,92,246,.2);border-radius:8px;padding:.6rem .8rem;margin-bottom:.8rem;font-size:.4rem;letter-spacing:.06em;color:#e0d8ff;line-height:1.9;"></div>`;
+  }
+  const existing=document.getElementById('ob-input-area');
+  if(existing)existing.remove();
+  if(inputHtml){
+    const div=document.createElement('div');div.id='ob-input-area';
+    div.innerHTML=inputHtml;
+    document.getElementById('ob-next').before(div);
+  }
+  document.getElementById('ob-next').textContent=isLast?'프로젝트 만들기 →':'다음 →';
+  document.querySelectorAll('.ob-dot').forEach((d,i)=>d.classList.toggle('active',i===obStep));
+}
+async function obNext(){
+  const s=OB_STEPS[obStep];
+  if(s.type==='input'){
+    const prob=document.getElementById('ob-problem')?.value?.trim();
+    if(prob){
+      const btn=document.getElementById('ob-next');
+      btn.disabled=true;btn.textContent='분석 중...';
+      try{
+        const raw=localStorage.getItem('nova_user');
+        const uid=raw?JSON.parse(raw).user_id:null;
+        if(uid){
+          const res=await fetch('/api/project',{method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({user_id:uid,description:prob})});
+          const data=await res.json();
+          if(data.project){
+            const replyEl=document.getElementById('ob-nova-reply');
+            replyEl.style.display='block';
+            replyEl.textContent=`"${data.project.title}" 프로젝트 생성! ${data.cluster.label} 클러스터에 연결됐어요.`;
+          }
+        }
+      }catch{}
+      btn.disabled=false;btn.textContent='우주 탐험 시작 →';
+      btn.onclick=obDone;return;
+    }
+  }
+  if(obStep<OB_STEPS.length-1){obStep++;obRender();}
+  else obDone();
+}
+function obDone(){
+  document.getElementById('onboard').classList.remove('open');
+  localStorage.setItem('nova_onboarded','1');
+}
+// 신규 가입 감지: ?star= 파라미터 + onboarded 플래그 없음
+(function(){
+  const isNew=new URLSearchParams(location.search).has('star')&&!localStorage.getItem('nova_onboarded');
+  if(!isNew)return;
+  obRender();
+  setTimeout(()=>document.getElementById('onboard').classList.add('open'),2500);
+})();
 
 // ─── 플랫폼 레벨 진행바 ────────────────────────────────
 async function loadPlatformLevel() {

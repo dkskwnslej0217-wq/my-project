@@ -16,6 +16,12 @@ export default async function handler(req) {
     return new Response('Method not allowed', { status: 405 });
   }
 
+  // 내부 호출 검증 — LOG_SECRET 헤더 확인
+  const secret = req.headers.get('x-log-secret') ?? '';
+  if (process.env.LOG_SECRET && secret !== process.env.LOG_SECRET) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
   let body;
   try { body = await req.json(); } catch {
     return new Response(JSON.stringify({ error: '잘못된 요청' }), {

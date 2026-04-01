@@ -36,7 +36,7 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: '비밀번호는 8자 이상이어야 합니다.' }), { status: 400 });
 
   const SUPA_URL = process.env.SUPABASE_URL;
-  const SUPA_KEY = process.env.SUPABASE_KEY;
+  const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
   const headers = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`,
                     'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
@@ -47,10 +47,13 @@ export default async function handler(req) {
   if (existing.length > 0)
     return new Response(JSON.stringify({ error: '이미 사용 중인 이메일입니다.' }), { status: 409 });
 
-  // 비밀번호 해싱 (Edge에서 crypto 사용)
-  const pwHash = Array.from(new Uint8Array(
-    await crypto.subtle.digest('SHA-256', new TextEncoder().encode(password + 'nova_salt_2026'))
-  )).map(b => b.toString(16).padStart(2, '0')).join('');
+  // 비밀번호 해싱 — PBKDF2 (랜덤 salt, 100,000 iterations)
+  const saltBytes = crypto.getRandomValues(new Uint8Array(16));
+  const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const hashBits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: saltBytes, iterations: 100000, hash: 'SHA-256' }, keyMaterial, 256);
+  const saltHex = Array.from(saltBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashHex = Array.from(new Uint8Array(hashBits)).map(b => b.toString(16).padStart(2, '0')).join('');
+  const pwHash = `pbkdf2:${saltHex}:${hashHex}`;
 
   const star = randomStar();
   const user_id = nickname.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString(36);

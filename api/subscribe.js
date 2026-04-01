@@ -31,8 +31,8 @@ export default async function handler(req) {
   const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/subscribers`, {
     method: 'POST',
     headers: {
-      'apikey': process.env.SUPABASE_KEY,
-      'Authorization': `Bearer ${process.env.SUPABASE_KEY}`,
+      'apikey': process.env.SUPABASE_SERVICE_KEY,
+      'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
       'Content-Type': 'application/json',
       'Prefer': 'resolution=ignore-duplicates',
     },

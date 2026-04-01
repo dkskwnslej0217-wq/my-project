@@ -2,6 +2,12 @@
   "rewrites": [
     { "source": "/login", "destination": "/login.html" },
     { "source": "/universe", "destination": "/output/universe/index.html" },
-    { "source": "/chat", "destination": "/output/chat/index.html" }
+    { "source": "/chat", "destination": "/output/chat/index.html" },
+    { "source": "/project", "destination": "/output/project/index.html" },
+    { "source": "/budget",  "destination": "/output/budget/index.html"  }
+  ],
+  "crons": [
+    { "path": "/api/alert?type=summary", "schedule": "0 0 * * *" },
+    { "path": "/api/alert?type=churn",   "schedule": "0 11 * * *" }
   ]
 }
