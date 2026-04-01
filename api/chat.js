@@ -15,16 +15,28 @@ function isRateLimited(ip) {
   return false;
 }
 
+// ─── 플랫폼 레벨별 모델 선택 ────────────────────────────
+async function getActiveModel() {
+  try {
+    const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/platform_config?id=eq.1&select=active_model`, {
+      headers: { 'apikey': process.env.SUPABASE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_KEY}` }
+    });
+    const data = await res.json();
+    return data[0]?.active_model ?? 'groq-70b';
+  } catch { return 'groq-70b'; }
+}
+
 // ─── 멀티모델 Fallback 순서 ─────────────────────────────
-// 1. groq-70b  (llama-3.3-70b-versatile) — 메인, 고품질
-// 2. groq-8b   (llama-3.1-8b-instant)    — fallback, 경량·빠름
-// 3. hardcoded — 모든 모델 실패 시 안내 메시지
-// 실패 조건: HTTP 비-200, 네트워크 오류, 타임아웃
-// 각 모델은 최대 2회(초기 1 + retry 1) 시도 후 다음 모델로 전환
-const MODELS = [
+// active_model → groq-8b(fallback) → 안내 메시지
+const GROQ_MODELS = [
   { id: 'llama-3.3-70b-versatile', label: 'groq-70b' },
   { id: 'llama-3.1-8b-instant',    label: 'groq-8b'  },
 ];
+const CLAUDE_MODELS = {
+  'claude-haiku':  'claude-haiku-4-5-20251001',
+  'claude-sonnet': 'claude-sonnet-4-6',
+  'claude-opus':   'claude-opus-4-6',
+};
 
 async function callGroq(modelId, messages, apiKey) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
@@ -151,58 +163,55 @@ export default async function handler(req) {
     { role: 'user', content: query },
   ];
 
-  const apiKey = process.env.GROQ_API_KEY;
   let answer = null;
   let usedModel = null;
 
-  // ─── Fallback 루프: 모델 순서대로 시도, 각 모델 최대 2회 ──
-  for (const model of MODELS) {
-    for (let attempt = 0; attempt < 2; attempt++) {
+  // ─── 플랫폼 레벨 모델 우선 시도 (Claude) ────────────────
+  const activeModel = await getActiveModel();
+  const claudeModelId = CLAUDE_MODELS[activeModel];
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+
+  if (claudeModelId && anthropicKey) {
+    try {
       const t0 = Date.now();
-      try {
-        const data = await callGroq(model.id, messages, apiKey);
-        const ms = Date.now() - t0;
-        const tokens = data.usage?.total_tokens ?? 0;
-        answer = data.choices?.[0]?.message?.content ?? null;
-        usedModel = model.label;
-        await logAiCall({ model: model.label, success: true, ms, tokens });
-        break;
-      } catch (e) {
-        const ms = Date.now() - t0;
-        if (attempt === 1) {
-          // 2회 모두 실패 시 로그 기록 후 다음 모델로
-          await logAiCall({ model: model.label, success: false, ms, error: e.message });
-        }
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: claudeModelId, max_tokens: 300,
+          system: SYSTEM_PROMPT,
+          messages: messages.filter(m => m.role !== 'system'),
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        answer = data.content?.[0]?.text ?? null;
+        usedModel = activeModel;
+        await logAiCall({ model: activeModel, success: true, ms: Date.now() - t0, tokens: (data.usage?.input_tokens ?? 0) + (data.usage?.output_tokens ?? 0) });
       }
+    } catch (e) {
+      await logAiCall({ model: activeModel, success: false, ms: 0, error: e.message });
     }
-    if (answer) break;
   }
 
-  // ─── Groq 전부 실패 시 Claude Haiku 폴백 ─────────────────
+  // ─── Claude 없거나 실패 시 Groq fallback ────────────────
   if (!answer) {
-    const anthropicKey = process.env.ANTHROPIC_API_KEY;
-    if (anthropicKey) {
-      try {
+    const groqKey = process.env.GROQ_API_KEY;
+    for (const model of GROQ_MODELS) {
+      for (let attempt = 0; attempt < 2; attempt++) {
         const t0 = Date.now();
-        const res = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'claude-haiku-4-5-20251001',
-            max_tokens: 150,
-            system: SYSTEM_PROMPT,
-            messages,
-          }),
-        });
-        if (res.ok) {
-          const data = await res.json();
-          answer = data.content?.[0]?.text ?? null;
-          usedModel = 'claude-haiku';
-          await logAiCall({ model: 'claude-haiku', success: true, ms: Date.now() - t0, tokens: data.usage?.input_tokens + data.usage?.output_tokens });
+        try {
+          const data = await callGroq(model.id, messages, groqKey);
+          const ms = Date.now() - t0;
+          answer = data.choices?.[0]?.message?.content ?? null;
+          usedModel = model.label;
+          await logAiCall({ model: model.label, success: true, ms, tokens: data.usage?.total_tokens ?? 0 });
+          break;
+        } catch (e) {
+          if (attempt === 1) await logAiCall({ model: model.label, success: false, ms: Date.now() - t0, error: e.message });
         }
-      } catch (e) {
-        await logAiCall({ model: 'claude-haiku', success: false, ms: 0, error: e.message });
       }
+      if (answer) break;
     }
   }
 

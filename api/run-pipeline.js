@@ -157,6 +157,15 @@ export default async function handler(req) {
     await tg(`⚠️ 사용량 초기화 실패\n${e.message}`);
   }
 
+  // 플랫폼 유저수 동기화 (레벨 자동 갱신)
+  try {
+    await fetch('https://my-project-xi-sand-93.vercel.app/api/platform', {
+      method: 'POST',
+      headers: { 'x-pipeline-secret': PIPELINE_SECRET, 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+  } catch { /* 동기화 실패는 파이프라인 중단 안 함 */ }
+
   const startedAt = new Date().toISOString();
   await tg(`🚀 NOVA 파이프라인 시작 (${startedAt.slice(0, 16)})`);
 
