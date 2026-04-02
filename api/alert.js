@@ -20,19 +20,32 @@ export default async function handler(req) {
 
   const SUPA_URL = process.env.SUPABASE_URL;
   const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
-  const TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+  const TG_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
   const TG_CHAT  = process.env.TELEGRAM_CHAT_ID;
   const h = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` };
 
-  const type = url.searchParams.get('type') || 'churn'; // churn | summary | new_user
+  const type = url.searchParams.get('type') || 'churn'; // churn | summary | new_user | debug
+
+  // ─── 디버그 ───────────────────────────────────────────
+  if (type === 'debug') {
+    const tgRes = await sendTelegram(TG_TOKEN, TG_CHAT, '🔧 NOVA 디버그 테스트');
+    const tgBody = await tgRes.text();
+    return new Response(JSON.stringify({
+      token_set: !!TG_TOKEN,
+      token_len: TG_TOKEN?.length,
+      chat_id: TG_CHAT,
+      tg_status: tgRes.status,
+      tg_body: tgBody
+    }), { headers: { 'content-type': 'application/json' } });
+  }
 
   try {
 
-    // ─── 1. 이탈 감지 (3일 이상 미접속) ─────────────────
+    // ─── 1. 이탈 감지 (3일 이상 전 가입 + 오늘 사용 0회) ───
     if (type === 'churn') {
       const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
       const res = await fetch(
-        `${SUPA_URL}/rest/v1/users?last_active=lt.${cutoff}&select=nickname,plan,last_active&order=last_active.asc&limit=20`,
+        `${SUPA_URL}/rest/v1/users?created_at=lt.${cutoff}&daily_count=eq.0&plan_type=neq.admin&select=nickname,plan_type,created_at&order=created_at.asc&limit=20`,
         { headers: h }
       );
       const users = await res.json();
@@ -45,9 +58,9 @@ export default async function handler(req) {
       }
 
       const lines = atRisk.map(u => {
-        const days = Math.floor((Date.now() - new Date(u.last_active)) / 86400000);
-        const planEmoji = u.plan === 'pro' ? '💜' : u.plan === 'starter' ? '💙' : '⚪';
-        return `${planEmoji} <b>${u.nickname || '익명'}</b> · ${days}일 미접속`;
+        const days = Math.floor((Date.now() - new Date(u.created_at)) / 86400000);
+        const planEmoji = u.plan_type === 'pro' ? '💜' : u.plan_type === 'starter' ? '💙' : '⚪';
+        return `${planEmoji} <b>${u.nickname || '익명'}</b> · 가입 ${days}일째 미사용`;
       });
 
       const msg = `⚠️ <b>이탈 위험 유저 ${atRisk.length}명</b>\n\n${lines.join('\n')}\n\n<i>3일 이상 미접속</i>`;
@@ -74,7 +87,7 @@ export default async function handler(req) {
 
       const planCounts = { free: 0, starter: 0, pro: 0 };
       for (const u of (Array.isArray(users) ? users : [])) {
-        const p = u.plan || 'free';
+        const p = u.plan_type || 'free';
         if (p in planCounts) planCounts[p]++;
       }
       const totalUsers    = planCounts.free + planCounts.starter + planCounts.pro;

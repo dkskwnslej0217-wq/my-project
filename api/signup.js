@@ -105,6 +105,21 @@ export default async function handler(req) {
     });
   }
 
+  // 신규 가입 Telegram 알림 (fire-and-forget)
+  const TG_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+  const TG_CHAT = process.env.TELEGRAM_CHAT_ID;
+  if (TG_TOKEN && TG_CHAT) {
+    fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TG_CHAT,
+        text: `🌟 <b>신규 유저 가입!</b>\n닉네임: <b>${nickname}</b>\n이메일: ${email}\n플랜: free${referrer_id ? '\n레퍼럴: ' + referrer_id : ''}`,
+        parse_mode: 'HTML'
+      })
+    }).catch(() => {});
+  }
+
   return new Response(JSON.stringify({
     user: { user_id, nickname, email, star_x: star.x, star_y: star.y, star_z: star.z,
             star_color: color, star_size: 1.0 }
