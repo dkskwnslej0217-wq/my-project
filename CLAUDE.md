@@ -23,6 +23,7 @@ URL: my-project-xi-sand-93.vercel.app | 스택: Vercel Edge + Supabase + Make.co
 무료API만: Groq✅ Gemini✅ GoogleTTS✅ Pexels✅ | 유료 추가 금지
 
 ## 명령어
+- "저장해" → 지금 작업 상태를 memory/L1_state.md `## 진행 중`에 즉시 기록 후 종료
 - "업로드 시작해줘" → output/staging/ 목록 + Make.com 웹훅
 - "스테이징 목록" → output/staging/ ls
 - "납품 준비해줘" → brain/납품패키지.md
