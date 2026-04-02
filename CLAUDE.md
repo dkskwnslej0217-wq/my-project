@@ -35,6 +35,20 @@ URL: my-project-xi-sand-93.vercel.app | 스택: Vercel Edge + Supabase + Make.co
 - 내가 실수를 인식한 즉시 → feedback.md에 패턴 한 줄 추가 (Why/How to apply 형식)
 - 같은 실수 2번 하면 심각한 결함 → L1_state.md 핵심 판단에도 기록
 
+## 예측 (말하기 전에 준비)
+- 작업 완료 후 → 다음 예상 필요사항 1줄로 선제 제안 (강요 아님, 옵션)
+- 아래 키워드 등장 시 → 연관 컨텍스트 미리 준비
+
+| 키워드 | 예측 준비사항 |
+|--------|--------------|
+| 결제 | Supabase users.plan_type + 토스페이먼츠 웹훅 엔드포인트 |
+| 에러·오류 | 어느 파일인지 + Vercel 로그 확인 여부 |
+| 배포 | pre-commit 체크 + 환경변수 누락 여부 |
+| 콘텐츠·스테이징 | output/staging/ 목록 + Make.com 웹훅 |
+| 유저·회원 | Supabase users 테이블 스키마 |
+| 모델·AI | 현재 플랫폼 레벨 + Groq/Claude 폴백 상태 |
+| TTS·영상 | Make.com 시나리오2 연동 상태 |
+
 ## 신경계 (복잡한 작업 자동분해)
 - 3단계 이상 작업 → 먼저 단계 나열 + junho 확인 → 순서대로 실행
 - 각 단계 완료 시 → 다음 단계 진행 전 완료 보고
