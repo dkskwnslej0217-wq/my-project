@@ -79,6 +79,8 @@ export default async function handler(req) {
 
   // PATCH /api/project?id=xxx — 노트 업데이트
   if (req.method === 'PATCH') {
+    const token = req.headers.get('x-session-token');
+    if (!token) return new Response(JSON.stringify({ error: '인증 필요' }), { status: 401 });
     const id = url.searchParams.get('id');
     if (!id) return new Response(JSON.stringify({ error: 'id required' }), { status: 400 });
     const body = await req.json();
@@ -91,6 +93,8 @@ export default async function handler(req) {
 
   // POST /api/project — 프로젝트 생성
   if (req.method === 'POST') {
+    const token = req.headers.get('x-session-token');
+    if (!token) return new Response(JSON.stringify({ error: '인증 필요' }), { status: 401 });
     const body = await req.json();
     const { user_id, description } = body;
     if (!user_id || !description?.trim())

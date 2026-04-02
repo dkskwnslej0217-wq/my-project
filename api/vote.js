@@ -36,8 +36,22 @@ export default async function handler(req) {
 
   // POST — 투표 토글 (있으면 취소, 없으면 추가)
   if (req.method === 'POST') {
+    const token = req.headers.get('x-session-token');
+    if (!token) return new Response(JSON.stringify({ error: '인증 필요' }), { status: 401 });
+
     const { user_id, target_type = 'cluster', target_id } = await req.json();
     if (!user_id || !target_id) return new Response(JSON.stringify({ error: '필수 항목 누락' }), { status: 400 });
+
+    // 토큰 검증
+    const sessionRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/sessions?token=eq.${encodeURIComponent(token)}&select=user_id,expires_at`,
+      { headers: h }
+    );
+    const sessionData = await sessionRes.json();
+    if (!sessionData[0] || new Date(sessionData[0].expires_at) < new Date())
+      return new Response(JSON.stringify({ error: '세션 만료' }), { status: 401 });
+    if (sessionData[0].user_id !== user_id)
+      return new Response(JSON.stringify({ error: '권한 없음' }), { status: 403 });
 
     // 이미 투표했는지 확인
     const checkRes = await fetch(

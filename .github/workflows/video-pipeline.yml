@@ -1,0 +1,38 @@
+name: NOVA 영상 파이프라인
+
+on:
+  repository_dispatch:
+    types: [create-video]
+
+jobs:
+  make-video:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: FFmpeg 설치
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: googleapis 설치
+        run: npm install googleapis node-fetch
+
+      - name: 영상 생성 + 업로드
+        run: node scripts/generate_video.js
+        env:
+          SCRIPT_TEXT: ${{ github.event.client_payload.text }}
+          SCRIPT_TITLE: ${{ github.event.client_payload.title }}
+          SCRIPT_TAGS: ${{ github.event.client_payload.tags }}
+          TTS_ENDPOINT: ${{ secrets.TTS_ENDPOINT }}
+          PIPELINE_SECRET: ${{ secrets.PIPELINE_SECRET }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+          YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}

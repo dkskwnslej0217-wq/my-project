@@ -98,6 +98,7 @@ html,body{width:100%;min-height:100%;background:#000005;font-family:'Orbitron',s
   <a href="/chat" class="bnav-item"><span class="bnav-icon">◎</span><span class="bnav-text">CHAT</span></a>
   <a href="/project" class="bnav-item"><span class="bnav-icon">⬡</span><span class="bnav-text">PROJECT</span></a>
   <a href="/budget" class="bnav-item"><span class="bnav-icon">◈</span><span class="bnav-text">BUDGET</span></a>
+  <a href="/upgrade" class="bnav-item"><span class="bnav-icon">⬆</span><span class="bnav-text">UPGRADE</span></a>
 </nav>
 
 <div id="card">
@@ -187,6 +188,7 @@ async function submit(){
       if(!res.ok){msg(data.error||'오류가 발생했습니다.');return;}
       msg('별이 생성됐습니다! 우주로 이동 중...','ok');
       localStorage.setItem('nova_user',JSON.stringify(data.user));
+      if (data.token) localStorage.setItem('nova_token', data.token);
       localStorage.removeItem('nova_ref');
       setTimeout(()=>location.href='/?star='+data.user.user_id,1200);
     } else {
@@ -200,6 +202,7 @@ async function submit(){
       if(!res.ok){msg(data.error||'로그인 실패');return;}
       msg('로그인 완료!','ok');
       localStorage.setItem('nova_user',JSON.stringify(data.user));
+      if (data.token) localStorage.setItem('nova_token', data.token);
       setTimeout(()=>location.href='/?star='+data.user.user_id,800);
     }
   } finally {btn.disabled=false;}

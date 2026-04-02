@@ -120,8 +120,17 @@ export default async function handler(req) {
     }).catch(() => {});
   }
 
+  // 세션 토큰 발급
+  const token = crypto.randomUUID();
+  await fetch(`${SUPA_URL}/rest/v1/sessions`, {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, user_id })
+  }).catch(() => {});
+
   return new Response(JSON.stringify({
     user: { user_id, nickname, email, star_x: star.x, star_y: star.y, star_z: star.z,
-            star_color: color, star_size: 1.0 }
+            star_color: color, star_size: 1.0 },
+    token
   }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }

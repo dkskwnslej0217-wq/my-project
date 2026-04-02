@@ -246,6 +246,7 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
   <a href="/chat" class="bnav-item"><span class="bnav-icon">◎</span><span class="bnav-text">CHAT</span></a>
   <a href="/project" class="bnav-item active"><span class="bnav-icon">⬡</span><span class="bnav-text">PROJECT</span></a>
   <a href="/budget" class="bnav-item"><span class="bnav-icon">◈</span><span class="bnav-text">BUDGET</span></a>
+  <a href="/upgrade" class="bnav-item"><span class="bnav-icon">⬆</span><span class="bnav-text">UPGRADE</span></a>
 </nav>
 
 <!-- 새 프로젝트 모달 -->
@@ -352,6 +353,7 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
 // ─── 유저 ────────────────────────────────────────────
 const me = (() => { try { return JSON.parse(localStorage.getItem('nova_user')); } catch { return null; } })();
 if (!me) { location.href = '/login.html'; }
+const authHeader = () => ({ 'x-session-token': localStorage.getItem('nova_token') || '' });
 
 const orb = document.getElementById('top-orb');
 orb.style.background = `radial-gradient(circle at 35% 35%, ${me.star_color}cc, ${me.star_color}, #1e1b4b)`;
@@ -407,7 +409,7 @@ async function completeManualQuest(quest_id, title, reward) {
   try {
     const res = await fetch('/api/quest', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
       body: JSON.stringify({ user_id: me.user_id, quest_id })
     });
     const data = await res.json();
@@ -459,7 +461,7 @@ function renderProjects(projects) {
       const notes = div.querySelector('.project-notes-area').value;
       const res = await fetch('/api/project?id=' + p.id, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify({ notes })
       });
       if ((await res.json()).ok) {
@@ -468,7 +470,7 @@ function renderProjects(projects) {
         // 퀘스트 q3(노트 작성) 완료
         await fetch('/api/quest', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...authHeader() },
           body: JSON.stringify({ user_id: me.user_id, quest_id: 'q3' })
         }).catch(() => {});
       }
@@ -540,7 +542,7 @@ async function loadClusterVote(tag) {
 async function toggleClusterVote(tag) {
   const res = await fetch('/api/vote', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeader() },
     body: JSON.stringify({ user_id: me.user_id, target_type: 'cluster', target_id: tag })
   });
   const d = await res.json();
@@ -591,7 +593,7 @@ async function createProject() {
   try {
     const res = await fetch('/api/project', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeader() },
       body: JSON.stringify({ user_id: me.user_id, description: desc })
     });
     const data = await res.json();
