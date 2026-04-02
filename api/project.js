@@ -83,6 +83,24 @@ export default async function handler(req) {
     if (!token) return new Response(JSON.stringify({ error: '인증 필요' }), { status: 401 });
     const id = url.searchParams.get('id');
     if (!id) return new Response(JSON.stringify({ error: 'id required' }), { status: 400 });
+
+    // 소유권 확인
+    const sessRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/sessions?token=eq.${encodeURIComponent(token)}&select=user_id,expires_at`,
+      { headers }
+    );
+    const sessData = await sessRes.json();
+    if (!sessData[0] || new Date(sessData[0].expires_at) < new Date())
+      return new Response(JSON.stringify({ error: '세션 만료' }), { status: 401 });
+
+    const projRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/projects?id=eq.${id}&select=user_id`,
+      { headers }
+    );
+    const projData = await projRes.json();
+    if (!projData[0] || projData[0].user_id !== sessData[0].user_id)
+      return new Response(JSON.stringify({ error: '권한 없음' }), { status: 403 });
+
     const body = await req.json();
     const res = await fetch(`${env.SUPABASE_URL}/rest/v1/projects?id=eq.${id}`, {
       method: 'PATCH', headers,

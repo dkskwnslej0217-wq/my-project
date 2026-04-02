@@ -149,6 +149,23 @@ export default async function handler(req) {
 
   // 사용량 체크 (user_id 있을 때만)
   const userId = body.user_id ?? null;
+
+  // 토큰 검증 (user_id 있을 때만 — 비로그인 허용)
+  if (userId) {
+    const token = req.headers.get('x-session-token');
+    if (token) {
+      const sessRes = await fetch(
+        `${process.env.SUPABASE_URL}/rest/v1/sessions?token=eq.${encodeURIComponent(token)}&select=user_id,expires_at`,
+        { headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}` } }
+      );
+      const sessData = await sessRes.json();
+      if (!sessData[0] || new Date(sessData[0].expires_at) < new Date() || sessData[0].user_id !== userId) {
+        return new Response(JSON.stringify({ error: '세션이 만료됐습니다. 다시 로그인해주세요.' }), {
+          status: 401, headers: { 'Content-Type': 'application/json' }
+        });
+      }
+    }
+  }
   let usageInfo = null;
   if (userId) {
     const usage = await checkAndIncrementUsage(userId);

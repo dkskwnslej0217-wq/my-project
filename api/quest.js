@@ -89,9 +89,22 @@ export default async function handler(req) {
 
   // POST — 수동 퀘스트 완료 (q3 노트, q6 클러스터)
   if (req.method === 'POST') {
+    const token = req.headers.get('x-session-token');
+    if (!token) return new Response(JSON.stringify({ error: '인증 필요' }), { status: 401 });
+
     const body = await req.json();
     const { user_id, quest_id } = body;
     if (!user_id || !quest_id) return new Response(JSON.stringify({ error: '필수 항목 누락' }), { status: 400 });
+
+    const sessRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/sessions?token=eq.${encodeURIComponent(token)}&select=user_id,expires_at`,
+      { headers }
+    );
+    const sessData = await sessRes.json();
+    if (!sessData[0] || new Date(sessData[0].expires_at) < new Date())
+      return new Response(JSON.stringify({ error: '세션 만료' }), { status: 401 });
+    if (sessData[0].user_id !== user_id)
+      return new Response(JSON.stringify({ error: '권한 없음' }), { status: 403 });
 
     const quest = QUESTS.find(q => q.id === quest_id);
     if (!quest) return new Response(JSON.stringify({ error: '퀘스트 없음' }), { status: 404 });

@@ -34,9 +34,22 @@ export default async function handler(req) {
 
   // POST — 성과 기록
   if (req.method === 'POST') {
+    const token = req.headers.get('x-session-token');
+    if (!token) return new Response(JSON.stringify({ error: '인증 필요' }), { status: 401 });
+
     const body = await req.json();
     const { user_id, project_id, platform, title, views, likes, shares, comments, posted_at } = body;
     if (!user_id || !platform) return new Response(JSON.stringify({ error: '필수 항목 누락' }), { status: 400 });
+
+    const sessRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/sessions?token=eq.${encodeURIComponent(token)}&select=user_id,expires_at`,
+      { headers: h }
+    );
+    const sessData = await sessRes.json();
+    if (!sessData[0] || new Date(sessData[0].expires_at) < new Date())
+      return new Response(JSON.stringify({ error: '세션 만료' }), { status: 401 });
+    if (sessData[0].user_id !== user_id)
+      return new Response(JSON.stringify({ error: '권한 없음' }), { status: 403 });
 
     const res = await fetch(`${env.SUPABASE_URL}/rest/v1/content_stats`, {
       method: 'POST',
