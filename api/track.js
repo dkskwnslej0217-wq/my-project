@@ -1,16 +1,19 @@
 export const config = { runtime: 'edge' };
 
-const ipMap = new Map();
-function isRateLimited(ip) {
-  const now = Date.now();
-  const window = 60_000;
-  const limit = 10;
-  const entry = ipMap.get(ip) ?? { count: 0, start: now };
-  if (now - entry.start > window) { ipMap.set(ip, { count: 1, start: now }); return false; }
-  if (entry.count >= limit) return true;
-  entry.count++;
-  ipMap.set(ip, entry);
-  return false;
+async function isRateLimited(ip) {
+  try {
+    const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/check_rate_limit`, {
+      method: 'POST',
+      headers: {
+        'apikey': process.env.SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ p_key: `track:${ip}`, p_window: 60, p_limit: 10 }),
+    });
+    const data = await res.json();
+    return data === true;
+  } catch { return false; }
 }
 
 export default async function handler(req) {
@@ -25,7 +28,7 @@ export default async function handler(req) {
   }
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  if (isRateLimited(ip)) {
+  if (await isRateLimited(ip)) {
     return new Response(JSON.stringify({ error: '잠시 후 다시 시도해주세요.' }), {
       status: 429, headers: { 'Content-Type': 'application/json' }
     });
