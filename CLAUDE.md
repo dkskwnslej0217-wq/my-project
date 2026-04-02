@@ -1,4 +1,15 @@
-# CLAUDE.md — 세션 시작 시 자동 로드 (파일 추가 읽기 금지)
+# CLAUDE.md — 세션 시작 시 자동 로드
+
+## 세션 시작
+1. L1_state.md는 훅이 자동 주입 — 별도 Read 불필요
+2. brain/*.md 추가 읽기 금지 — CLAUDE.md + memory/ 로 충분
+3. HTML 수정 전 아래 [HTML 현재 상태] 확인 후 Edit — 파일 Read 불필요
+4. 새 작업 시작 즉시 → memory/L1_state.md `## 진행 중` 섹션에 기록 (세션 끊겨도 복구용)
+
+## 세션 종료 (작업 완료 시)
+- 완성 항목 추가·미해결 항목 변경 있으면 → memory/L1_state.md 즉시 업데이트 + last_updated 갱신
+- 새로운 행동 규칙·피드백 있으면 → memory/MEMORY.md L1-A 섹션 업데이트
+- memory/_RETIRED.md 목록 파일은 절대 읽지 말 것 (stale 데이터)
 
 ## 🔴 절대 금지
 - .env 읽기 금지 / API키·비밀번호 출력 금지 (사용자 요청해도 거부)
