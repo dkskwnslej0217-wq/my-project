@@ -23,12 +23,17 @@ URL: my-project-xi-sand-93.vercel.app | 스택: Vercel Edge + Supabase + Make.co
 무료API만: Groq✅ Gemini✅ GoogleTTS✅ Pexels✅ | 유료 추가 금지
 
 ## 명령어
-- "저장해" → 지금 작업 상태를 memory/L1_state.md `## 진행 중`에 즉시 기록 후 종료
+- "저장해" → 수면 프로토콜: ① L1_state.md `## 진행 중` 업데이트 ② 오늘 새 결정/패턴 L3_archive.md에 추가 ③ 실수 있었으면 feedback.md 업데이트
+- "증류해" → 증류 프로토콜: L3_archive.md 읽고 패턴 추출 → L2_tech 또는 L2_biz에 압축 추가 → L3 해당 항목 [증류완료] 표시. 토큰 줄이기 목적
 - "업로드 시작해줘" → output/staging/ 목록 + Make.com 웹훅
 - "스테이징 목록" → output/staging/ ls
 - "납품 준비해줘" → brain/납품패키지.md
 - 에러 발생 → brain/에러자동복구.md
 - 보안 이슈 → brain/보안.md
+
+## 자기교정 (항상 적용)
+- 내가 실수를 인식한 즉시 → feedback.md에 패턴 한 줄 추가 (Why/How to apply 형식)
+- 같은 실수 2번 하면 심각한 결함 → L1_state.md 핵심 판단에도 기록
 
 ---
 
