@@ -5,6 +5,7 @@
 2. brain/*.md 추가 읽기 금지 — CLAUDE.md + memory/ 로 충분
 3. HTML 수정 전 아래 [HTML 현재 상태] 확인 후 Edit — 파일 Read 불필요
 4. 새 작업 시작 즉시 → memory/L1_state.md `## 진행 중` 섹션에 기록 (세션 끊겨도 복구용)
+5. **`## 진행 중` 내용 있으면 → 미해결 목록 나열 금지, 진행 중 작업 먼저 확인**
 
 ## 세션 종료 (작업 완료 시)
 - 완성 항목 추가·미해결 항목 변경 있으면 → memory/L1_state.md 즉시 업데이트 + last_updated 갱신
