@@ -24,7 +24,10 @@ async function run() {
     },
     body: JSON.stringify({ text: SCRIPT_TEXT })
   });
-  if (!ttsRes.ok) throw new Error(`TTS 실패: ${ttsRes.status}`);
+  if (!ttsRes.ok) {
+    const errText = await ttsRes.text();
+    throw new Error(`TTS 실패: ${ttsRes.status} — ${errText}`);
+  }
   const audioBuffer = await ttsRes.arrayBuffer();
   fs.writeFileSync('audio.mp3', Buffer.from(audioBuffer));
   console.log('✅ audio.mp3 저장 완료');
