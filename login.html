@@ -194,7 +194,9 @@ async function submitForgot(){
   btn.disabled=true;
   msgEl.style.color='rgba(167,139,250,.7)';msgEl.textContent='전송 중...';
   try{
-    await fetch('/api/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const res=await fetch('/api/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    const data=await res.json();
+    if(!res.ok){msgEl.style.color='#f87171';msgEl.textContent=data.error||'오류가 발생했습니다.';return;}
     msgEl.style.color='#34d399';
     msgEl.textContent='이메일을 확인해주세요. (스팸함도 확인)';
     document.getElementById('f-email').value='';

@@ -40,9 +40,8 @@ export default async function handler(req) {
   );
   const users = await res.json();
 
-  // 보안상 이메일 없어도 동일 메시지
   if (!users.length) {
-    return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify({ error: '가입된 이메일이 없습니다.' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
   }
 
   const user = users[0];
