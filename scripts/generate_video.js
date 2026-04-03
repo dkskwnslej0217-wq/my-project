@@ -22,7 +22,7 @@ async function run() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         input: { text: (SCRIPT_TEXT || '').slice(0, 2500) },
-        voice: { languageCode: 'ko-KR', name: 'ko-KR-Neural2-C', ssmlGender: 'FEMALE' },
+        voice: { languageCode: 'ko-KR', name: 'ko-KR-Neural2-A', ssmlGender: 'FEMALE' },
         audioConfig: { audioEncoding: 'MP3', speakingRate: 1.05 }
       })
     }
