@@ -11,3 +11,7 @@ node_modules/
 *.mp3
 *.wav
 *.mov
+
+# 로컬 전용 도구
+get_token.js
+get_token.cjs

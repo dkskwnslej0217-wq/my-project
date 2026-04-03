@@ -278,14 +278,14 @@ document.addEventListener('click', e => {
 })();
 
 // ─── 초기화 ───────────────────────────────────────────
-const urlId = new URLSearchParams(location.search).get('id');
+let urlId = new URLSearchParams(location.search).get('id');
 const stored = localStorage.getItem('nova_user');
 let me = null;
 try { me = stored ? JSON.parse(stored) : null; } catch {}
 
-// ?id 없으면 본인 페이지로 리다이렉트
+// ?id 없으면 본인 페이지로 리다이렉트 (replaceState로 튕김 방지)
 if (!urlId) {
-  if (me) { location.href = '/chat?id=' + me.user_id; }
+  if (me) { urlId = me.user_id; history.replaceState(null, '', '/chat?id=' + me.user_id); }
   else { location.href = '/login'; }
 }
 

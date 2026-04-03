@@ -26,19 +26,6 @@ export default async function handler(req) {
 
   const type = url.searchParams.get('type') || 'churn'; // churn | summary | new_user | debug
 
-  // ─── 디버그 ───────────────────────────────────────────
-  if (type === 'debug') {
-    const tgRes = await sendTelegram(TG_TOKEN, TG_CHAT, '🔧 NOVA 디버그 테스트');
-    const tgBody = await tgRes.text();
-    return new Response(JSON.stringify({
-      token_set: !!TG_TOKEN,
-      token_len: TG_TOKEN?.length,
-      chat_id: TG_CHAT,
-      tg_status: tgRes.status,
-      tg_body: tgBody
-    }), { headers: { 'content-type': 'application/json' } });
-  }
-
   try {
 
     // ─── 1. 이탈 감지 (3일 이상 전 가입 + 오늘 사용 0회) ───
