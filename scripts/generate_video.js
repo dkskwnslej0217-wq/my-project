@@ -15,7 +15,8 @@ const {
 async function run() {
   // 1. TTS → audio.mp3
   console.log('🎙️ TTS 생성 중...');
-  const ttsRes = await fetch(`${TTS_ENDPOINT}/api/tts`, {
+  const endpoint = TTS_ENDPOINT || 'https://my-project-xi-sand-93.vercel.app';
+  const ttsRes = await fetch(`${endpoint}/api/tts`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
