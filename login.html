@@ -130,12 +130,24 @@ html,body{width:100%;min-height:100%;background:#000005;font-family:'Orbitron',s
   <a href="/" id="back">← 우주로 돌아가기</a>
 </div>
 
-<!-- 비밀번호 찾기 모달 -->
+<!-- 비밀번호/이메일 찾기 모달 -->
 <div id="forgot-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,5,.85);backdrop-filter:blur(8px);align-items:center;justify-content:center;">
   <div style="background:rgba(4,0,18,.97);border:1px solid rgba(139,92,246,.3);border-radius:16px;padding:2rem;width:min(88vw,340px);">
-    <div style="font-size:.75rem;letter-spacing:.2em;color:#e9d5ff;margin-bottom:1.2rem;">비밀번호 찾기</div>
-    <div class="field"><label>가입한 이메일</label><input id="f-email" type="email" placeholder="your@email.com"/></div>
-    <button onclick="submitForgot()" id="forgot-btn" style="width:100%;padding:.65rem;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,#4338ca,#7c3aed);color:#fff;font-family:'Orbitron',sans-serif;font-size:.78rem;letter-spacing:.2em;">임시 비밀번호 발송</button>
+    <!-- 탭 -->
+    <div style="display:flex;gap:.4rem;margin-bottom:1.2rem;">
+      <button id="ftab-pw" onclick="switchForgotTab('pw')" style="flex:1;padding:.4rem;border-radius:7px;font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.12em;cursor:pointer;border:1px solid rgba(139,92,246,.4);background:rgba(109,40,217,.35);color:#e9d5ff;">비밀번호 찾기</button>
+      <button id="ftab-id" onclick="switchForgotTab('id')" style="flex:1;padding:.4rem;border-radius:7px;font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.12em;cursor:pointer;border:1px solid rgba(139,92,246,.25);background:transparent;color:rgba(167,139,250,.7);">이메일 찾기</button>
+    </div>
+    <!-- 비밀번호 찾기 -->
+    <div id="fpanel-pw">
+      <div class="field"><label>가입한 이메일</label><input id="f-email" type="email" placeholder="your@email.com"/></div>
+      <button onclick="submitForgot()" id="forgot-btn" style="width:100%;padding:.65rem;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,#4338ca,#7c3aed);color:#fff;font-family:'Orbitron',sans-serif;font-size:.78rem;letter-spacing:.2em;">임시 비밀번호 발송</button>
+    </div>
+    <!-- 이메일 찾기 -->
+    <div id="fpanel-id" style="display:none;">
+      <div class="field"><label>닉네임</label><input id="f-nick" type="text" placeholder="JUNHO" style="text-transform:uppercase;"/></div>
+      <button onclick="submitFindId()" id="findid-btn" style="width:100%;padding:.65rem;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,#4338ca,#7c3aed);color:#fff;font-family:'Orbitron',sans-serif;font-size:.78rem;letter-spacing:.2em;">이메일 확인</button>
+    </div>
     <div id="forgot-msg" style="font-size:.72rem;letter-spacing:.1em;text-align:center;margin-top:.8rem;min-height:1rem;"></div>
     <button onclick="closeForgot()" style="display:block;margin:.8rem auto 0;background:none;border:none;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.15em;color:rgba(167,139,250,.5);">닫기</button>
   </div>
@@ -177,6 +189,15 @@ function switchTab(t){
   document.getElementById('forgot-wrap').style.display=t==='login'?'block':'none';
 }
 
+function switchForgotTab(t){
+  document.getElementById('fpanel-pw').style.display=t==='pw'?'block':'none';
+  document.getElementById('fpanel-id').style.display=t==='id'?'block':'none';
+  document.getElementById('ftab-pw').style.background=t==='pw'?'rgba(109,40,217,.35)':'transparent';
+  document.getElementById('ftab-pw').style.color=t==='pw'?'#e9d5ff':'rgba(167,139,250,.7)';
+  document.getElementById('ftab-id').style.background=t==='id'?'rgba(109,40,217,.35)':'transparent';
+  document.getElementById('ftab-id').style.color=t==='id'?'#e9d5ff':'rgba(167,139,250,.7)';
+  document.getElementById('forgot-msg').textContent='';
+}
 function showForgot(){
   document.getElementById('forgot-modal').style.display='flex';
   document.getElementById('f-email').focus();
@@ -185,6 +206,23 @@ function closeForgot(){
   document.getElementById('forgot-modal').style.display='none';
   document.getElementById('forgot-msg').textContent='';
   document.getElementById('f-email').value='';
+  document.getElementById('f-nick').value='';
+}
+async function submitFindId(){
+  const btn=document.getElementById('findid-btn');
+  const msgEl=document.getElementById('forgot-msg');
+  const nick=document.getElementById('f-nick').value.trim().toUpperCase();
+  if(!nick){msgEl.style.color='#f87171';msgEl.textContent='닉네임을 입력해주세요.';return;}
+  btn.disabled=true;
+  msgEl.style.color='rgba(167,139,250,.7)';msgEl.textContent='조회 중...';
+  try{
+    const res=await fetch('/api/find-email?nickname='+encodeURIComponent(nick));
+    const data=await res.json();
+    if(!res.ok){msgEl.style.color='#f87171';msgEl.textContent=data.error||'닉네임을 찾을 수 없습니다.';return;}
+    msgEl.style.color='#34d399';msgEl.textContent='이메일: '+data.email;
+  } catch {
+    msgEl.style.color='#f87171';msgEl.textContent='오류가 발생했습니다.';
+  } finally {btn.disabled=false;}
 }
 async function submitForgot(){
   const btn=document.getElementById('forgot-btn');
