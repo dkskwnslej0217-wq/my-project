@@ -40,7 +40,7 @@ async function fetchTrending() {
 async function extractKeywords(titles) {
   const prompt = `아래는 현재 한국 유튜브 급상승 영상 제목들입니다:\n${titles.join('\n')}\n\nSNS 콘텐츠(스레드/인스타/유튜브쇼츠)에 활용할 핵심 키워드 5개 추출. 단어만, 쉼표 구분.`;
   const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
