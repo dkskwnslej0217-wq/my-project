@@ -41,7 +41,7 @@ export default async function handler(req) {
                     'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
   // 이메일 중복 체크
-  const check = await fetch(`${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=id`,
+  const check = await fetch(`${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=user_id`,
     { headers });
   const existing = await check.json();
   if (existing.length > 0)
