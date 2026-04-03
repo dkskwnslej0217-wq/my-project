@@ -278,6 +278,7 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
     <input id="invite-link" type="text" readonly/>
     <button id="copy-btn">SHARE ✦</button>
   </div>
+  <button id="logout-btn" style="display:none;font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:.12em;color:rgba(167,139,250,.7);background:none;border:1px solid rgba(139,92,246,.3);border-radius:6px;padding:.3rem .6rem;cursor:pointer;transition:.2s;" onmouseover="this.style.color='#e9d5ff'" onmouseout="this.style.color='rgba(167,139,250,.7)'">LOGOUT</button>
 </div>
 
 <!-- 온보딩 모달 -->
@@ -302,6 +303,7 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
   <a href="/chat" class="bnav-item"><span class="bnav-icon">◎</span><span class="bnav-text">CHAT</span></a>
   <a href="/project" class="bnav-item"><span class="bnav-icon">⬡</span><span class="bnav-text">PROJECT</span></a>
   <a href="/budget" class="bnav-item"><span class="bnav-icon">◈</span><span class="bnav-text">BUDGET</span></a>
+  <a href="/upgrade" class="bnav-item"><span class="bnav-icon">⬆</span><span class="bnav-text">UPGRADE</span></a>
 </nav>
 
 <button id="fb-btn">FEEDBACK</button>
@@ -801,6 +803,15 @@ animate();
       this.textContent='COPIED!';
       setTimeout(()=>this.textContent='SHARE ✦',1500);
     });
+  };
+
+  // 로그아웃 버튼
+  const logoutBtn=document.getElementById('logout-btn');
+  logoutBtn.style.display='block';
+  logoutBtn.onclick=function(){
+    localStorage.removeItem('nova_user');
+    localStorage.removeItem('nova_token');
+    location.href='/login';
   };
 
   // 궤도 초기 위상 (star_x 값으로 시작 위치 결정)
