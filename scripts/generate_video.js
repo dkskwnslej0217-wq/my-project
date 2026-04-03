@@ -43,6 +43,7 @@ async function run() {
     { headers: { Authorization: PEXELS_API_KEY } }
   );
   const pexelsData = await pexelsRes.json();
+  if (!pexelsData.photos || pexelsData.photos.length === 0) throw new Error(`Pexels 결과 없음: ${JSON.stringify(pexelsData)}`);
   const imageUrl = pexelsData.photos[0].src.landscape;
   const imgRes = await fetch(imageUrl);
   const imgBuffer = await imgRes.arrayBuffer();
