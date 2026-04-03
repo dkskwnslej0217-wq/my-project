@@ -12,6 +12,8 @@ const SUPA_KEY      = process.env.SUPABASE_SERVICE_KEY;
 const TG_TOKEN      = process.env.TELEGRAM_TOKEN;
 const TG_CHAT       = process.env.TELEGRAM_CHAT_ID;
 const PIPELINE_SECRET = process.env.PIPELINE_SECRET;
+const GITHUB_TOKEN    = process.env.GITHUB_TOKEN;
+const GITHUB_REPO     = 'dkskwnslej0217-wq/my-project';
 
 // ─── Telegram 알림 ────────────────────────────────────────
 async function tg(msg) {
@@ -208,6 +210,36 @@ export default async function handler(req) {
         await tg(`🎉 유저 100명 돌파! (현재 ${count}명)\n👉 토스페이먼츠 자동 결제 연동할 때입니다.`);
       }
     } catch { /* 체크 실패는 무시 */ }
+
+    // GitHub Actions 영상 파이프라인 트리거
+    try {
+      const dispatchRes = await fetch(
+        `https://api.github.com/repos/${GITHUB_REPO}/dispatches`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${GITHUB_TOKEN}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            event_type: 'create-video',
+            client_payload: {
+              text: final.slice(0, 2500),
+              title: `NOVA AI — ${topic}`,
+              tags: keywords.split(',').map(k => k.trim()).join(','),
+            },
+          }),
+        }
+      );
+      if (dispatchRes.ok) {
+        await tg(`🎬 영상 파이프라인 트리거 완료`);
+      } else {
+        await tg(`⚠️ 영상 트리거 실패: ${dispatchRes.status}`);
+      }
+    } catch(e) {
+      await tg(`⚠️ 영상 트리거 오류: ${e.message}`);
+    }
 
     // 성공 알림
     await tg(`✅ NOVA 파이프라인 완료\n\n📌 키워드: ${keywords}\n\n${final.slice(0, 300)}...`);
