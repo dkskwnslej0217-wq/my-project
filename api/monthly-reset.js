@@ -5,7 +5,7 @@ export const config = { runtime: 'edge' };
 
 const SUPA_URL  = process.env.SUPABASE_URL;
 const SUPA_KEY  = process.env.SUPABASE_SERVICE_KEY;
-const TG_TOKEN  = process.env.TELEGRAM_TOKEN;
+const TG_TOKEN  = process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_TOKEN;
 const TG_CHAT   = process.env.TELEGRAM_CHAT_ID;
 const PIPELINE_SECRET = process.env.PIPELINE_SECRET;
 
