@@ -124,7 +124,21 @@ html,body{width:100%;min-height:100%;background:#000005;font-family:'Orbitron',s
 
   <button id="submit-btn" onclick="submit()">우주로 진입하기</button>
   <div id="msg"></div>
+  <div id="forgot-wrap" style="display:none;margin-top:.6rem;text-align:center;">
+    <button onclick="showForgot()" style="background:none;border:none;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.15em;color:rgba(167,139,250,.6);">비밀번호를 잊으셨나요?</button>
+  </div>
   <a href="/" id="back">← 우주로 돌아가기</a>
+</div>
+
+<!-- 비밀번호 찾기 모달 -->
+<div id="forgot-modal" style="display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,5,.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;">
+  <div style="background:rgba(4,0,18,.97);border:1px solid rgba(139,92,246,.3);border-radius:16px;padding:2rem;width:min(88vw,340px);">
+    <div style="font-size:.75rem;letter-spacing:.2em;color:#e9d5ff;margin-bottom:1.2rem;">비밀번호 찾기</div>
+    <div class="field"><label>가입한 이메일</label><input id="f-email" type="email" placeholder="your@email.com"/></div>
+    <button onclick="submitForgot()" id="forgot-btn" style="width:100%;padding:.65rem;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,#4338ca,#7c3aed);color:#fff;font-family:'Orbitron',sans-serif;font-size:.78rem;letter-spacing:.2em;">임시 비밀번호 발송</button>
+    <div id="forgot-msg" style="font-size:.72rem;letter-spacing:.1em;text-align:center;margin-top:.8rem;min-height:1rem;"></div>
+    <button onclick="closeForgot()" style="display:block;margin:.8rem auto 0;background:none;border:none;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.15em;color:rgba(167,139,250,.5);">닫기</button>
+  </div>
 </div>
 
 <script>
@@ -160,6 +174,33 @@ function switchTab(t){
   document.getElementById('tab-login').className='tab'+(t==='login'?' active':'');
   document.getElementById('submit-btn').textContent=t==='signup'?'우주로 진입하기':'로그인';
   document.getElementById('msg').textContent='';
+  document.getElementById('forgot-wrap').style.display=t==='login'?'block':'none';
+}
+
+function showForgot(){
+  document.getElementById('forgot-modal').style.display='flex';
+  document.getElementById('f-email').focus();
+}
+function closeForgot(){
+  document.getElementById('forgot-modal').style.display='none';
+  document.getElementById('forgot-msg').textContent='';
+  document.getElementById('f-email').value='';
+}
+async function submitForgot(){
+  const btn=document.getElementById('forgot-btn');
+  const msgEl=document.getElementById('forgot-msg');
+  const email=document.getElementById('f-email').value.trim();
+  if(!email){msgEl.style.color='#f87171';msgEl.textContent='이메일을 입력해주세요.';return;}
+  btn.disabled=true;
+  msgEl.style.color='rgba(167,139,250,.7)';msgEl.textContent='전송 중...';
+  try{
+    await fetch('/api/forgot',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email})});
+    msgEl.style.color='#34d399';
+    msgEl.textContent='이메일을 확인해주세요. (스팸함도 확인)';
+    document.getElementById('f-email').value='';
+  } catch {
+    msgEl.style.color='#f87171';msgEl.textContent='오류가 발생했습니다. 다시 시도해주세요.';
+  } finally {btn.disabled=false;}
 }
 
 function msg(text,ok){

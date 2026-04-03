@@ -61,8 +61,7 @@ async function run() {
 
   // 4. YouTube 업로드
   console.log('📤 YouTube 업로드 중...');
-  console.log('CLIENT_ID 존재:', !!YOUTUBE_CLIENT_ID, '| CLIENT_SECRET 존재:', !!YOUTUBE_CLIENT_SECRET, '| REFRESH_TOKEN 존재:', !!YOUTUBE_REFRESH_TOKEN);
-  const auth = new google.auth.OAuth2(YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET);
+const auth = new google.auth.OAuth2(YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET);
   auth.setCredentials({ refresh_token: YOUTUBE_REFRESH_TOKEN });
   const youtube = google.youtube({ version: 'v3', auth });
 
