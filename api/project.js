@@ -118,6 +118,17 @@ export default async function handler(req) {
     if (!user_id || !description?.trim())
       return new Response(JSON.stringify({ error: '필수 항목 누락' }), { status: 400 });
 
+    // 소유권 확인
+    const sessRes = await fetch(
+      `${env.SUPABASE_URL}/rest/v1/sessions?token=eq.${encodeURIComponent(token)}&select=user_id,expires_at`,
+      { headers }
+    );
+    const sessData = await sessRes.json();
+    if (!sessData[0] || new Date(sessData[0].expires_at) < new Date())
+      return new Response(JSON.stringify({ error: '세션 만료' }), { status: 401 });
+    if (sessData[0].user_id !== user_id)
+      return new Response(JSON.stringify({ error: '권한 없음' }), { status: 403 });
+
     const { primary, tags } = classifyTags(description);
 
     // AI로 프로젝트 제목 생성 (실패 시 description 앞 20자)
