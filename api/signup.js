@@ -37,8 +37,6 @@ export default async function handler(req) {
 
   const SUPA_URL = process.env.SUPABASE_URL;
   const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
-  if (!SUPA_URL || !SUPA_KEY) return new Response(JSON.stringify({ error: '환경변수 없음', url: !!SUPA_URL, key: !!SUPA_KEY }), { status: 500 });
-  if (!SUPA_KEY.startsWith('eyJ')) return new Response(JSON.stringify({ error: '키 형식 오류', prefix: SUPA_KEY.slice(0,10) }), { status: 500 });
   const headers = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`,
                     'Content-Type': 'application/json', 'Prefer': 'return=representation' };
 
@@ -82,8 +80,8 @@ export default async function handler(req) {
   });
 
   if (!insert.ok) {
-    const err = await insert.text();
-    return new Response(JSON.stringify({ error: err }), { status: 500 });
+    await insert.text();
+    return new Response(JSON.stringify({ error: '계정 생성 실패. 다시 시도해주세요.' }), { status: 500 });
   }
 
   const [user] = await insert.json();
