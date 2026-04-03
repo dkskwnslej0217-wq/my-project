@@ -7,29 +7,33 @@ import { google } from 'googleapis';
 
 const {
   SCRIPT_TEXT, SCRIPT_TITLE, SCRIPT_TAGS,
-  TTS_ENDPOINT, PIPELINE_SECRET, PEXELS_API_KEY,
+  GOOGLE_TTS_KEY, PEXELS_API_KEY,
   YOUTUBE_CLIENT_ID, YOUTUBE_CLIENT_SECRET, YOUTUBE_REFRESH_TOKEN,
   TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 } = process.env;
 
 async function run() {
-  // 1. TTS → audio.mp3
+  // 1. Google TTS 직접 호출 → audio.mp3
   console.log('🎙️ TTS 생성 중...');
-  const endpoint = TTS_ENDPOINT || 'https://my-project-xi-sand-93.vercel.app';
-  const ttsRes = await fetch(`${endpoint}/api/tts`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-pipeline-secret': PIPELINE_SECRET
-    },
-    body: JSON.stringify({ text: SCRIPT_TEXT })
-  });
+  const ttsRes = await fetch(
+    `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_TTS_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        input: { text: (SCRIPT_TEXT || '').slice(0, 2500) },
+        voice: { languageCode: 'ko-KR', name: 'ko-KR-Neural2-C', ssmlGender: 'FEMALE' },
+        audioConfig: { audioEncoding: 'MP3', speakingRate: 1.05 }
+      })
+    }
+  );
   if (!ttsRes.ok) {
     const errText = await ttsRes.text();
     throw new Error(`TTS 실패: ${ttsRes.status} — ${errText}`);
   }
-  const audioBuffer = await ttsRes.arrayBuffer();
-  fs.writeFileSync('audio.mp3', Buffer.from(audioBuffer));
+  const ttsData = await ttsRes.json();
+  const binary = Buffer.from(ttsData.audioContent, 'base64');
+  fs.writeFileSync('audio.mp3', binary);
   console.log('✅ audio.mp3 저장 완료');
 
   // 2. Pexels → background.jpg

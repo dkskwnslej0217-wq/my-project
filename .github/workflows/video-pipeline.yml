@@ -41,8 +41,7 @@ jobs:
           SCRIPT_TEXT: ${{ github.event.client_payload.text || inputs.text }}
           SCRIPT_TITLE: ${{ github.event.client_payload.title || inputs.title }}
           SCRIPT_TAGS: ${{ github.event.client_payload.tags || inputs.tags }}
-          TTS_ENDPOINT: ${{ secrets.TTS_ENDPOINT }}
-          PIPELINE_SECRET: ${{ secrets.PIPELINE_SECRET }}
+          GOOGLE_TTS_KEY: ${{ secrets.GOOGLE_TTS_KEY }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
           YOUTUBE_CLIENT_ID: ${{ secrets.YOUTUBE_CLIENT_ID }}
           YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
