@@ -3,6 +3,19 @@ name: NOVA 영상 파이프라인
 on:
   repository_dispatch:
     types: [create-video]
+  workflow_dispatch:
+    inputs:
+      text:
+        description: '영상 스크립트 텍스트'
+        required: true
+        default: 'NOVA AI가 만든 자동화 영상입니다.'
+      title:
+        description: '영상 제목'
+        required: true
+        default: 'NOVA 테스트 영상'
+      tags:
+        description: '태그 (쉼표 구분)'
+        default: 'NOVA,AI,자동화'
 
 jobs:
   make-video:
@@ -25,9 +38,9 @@ jobs:
       - name: 영상 생성 + 업로드
         run: node scripts/generate_video.js
         env:
-          SCRIPT_TEXT: ${{ github.event.client_payload.text }}
-          SCRIPT_TITLE: ${{ github.event.client_payload.title }}
-          SCRIPT_TAGS: ${{ github.event.client_payload.tags }}
+          SCRIPT_TEXT: ${{ github.event.client_payload.text || inputs.text }}
+          SCRIPT_TITLE: ${{ github.event.client_payload.title || inputs.title }}
+          SCRIPT_TAGS: ${{ github.event.client_payload.tags || inputs.tags }}
           TTS_ENDPOINT: ${{ secrets.TTS_ENDPOINT }}
           PIPELINE_SECRET: ${{ secrets.PIPELINE_SECRET }}
           PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
