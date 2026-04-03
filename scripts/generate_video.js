@@ -1,9 +1,9 @@
 // scripts/generate_video.js
 // TTS → Pexels 배경 → FFmpeg → YouTube 업로드 → Telegram 알림
 
-const fs = require('fs');
-const { execSync } = require('child_process');
-const { google } = require('googleapis');
+import fs from 'fs';
+import { execSync } from 'child_process';
+import { google } from 'googleapis';
 
 const {
   SCRIPT_TEXT, SCRIPT_TITLE, SCRIPT_TAGS,
