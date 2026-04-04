@@ -74,9 +74,30 @@ export default async function handler(req) {
         { headers }
       );
       const data = await res.json();
-      const uniqueUsers = new Set(data.map(p => p.user_id)).size;
+      const userIds = [...new Set(data.map(p => p.user_id))];
+      const uniqueUsers = userIds.length;
       const totalProjects = data.length;
-      return new Response(JSON.stringify({ count: uniqueUsers, project_count: totalProjects, tag: cluster_tag }), {
+
+      // cluster_rank=true 이면 유저 순위도 계산
+      const wantRank = url.searchParams.get('cluster_rank') === 'true';
+      const req_user = url.searchParams.get('user_id');
+      let rank = null;
+      if (wantRank && req_user && userIds.length > 0) {
+        const uRes = await fetch(
+          `${env.SUPABASE_URL}/rest/v1/users?user_id=in.(${userIds.map(id => encodeURIComponent(id)).join(',')})&select=user_id,star_size,total_chat_count`,
+          { headers }
+        );
+        const uData = await uRes.json();
+        uData.sort((a, b) => {
+          const sA = (a.star_size || 1) * 10 + (a.total_chat_count || 0);
+          const sB = (b.star_size || 1) * 10 + (b.total_chat_count || 0);
+          return sB - sA;
+        });
+        const idx = uData.findIndex(u => u.user_id === req_user);
+        rank = idx >= 0 ? idx + 1 : uniqueUsers;
+      }
+
+      return new Response(JSON.stringify({ count: uniqueUsers, project_count: totalProjects, tag: cluster_tag, rank }), {
         headers: { 'content-type': 'application/json' }
       });
     }

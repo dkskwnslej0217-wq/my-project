@@ -185,6 +185,7 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
 #cluster-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;}
 #cluster-label{font-size:.88rem;font-weight:700;letter-spacing:.12em;color:#fff;}
 #cluster-count{font-size:.75rem;letter-spacing:.08em;color:rgba(196,181,253,.7);}
+#cluster-rank{margin-left:.6rem;font-size:.68rem;padding:.15rem .5rem;border-radius:20px;background:rgba(124,58,237,.25);border:1px solid rgba(124,58,237,.4);color:#c4b5fd;letter-spacing:.06em;}
 #cluster-desc{font-size:.78rem;letter-spacing:.04em;color:rgba(196,181,253,.65);line-height:1.9;margin-bottom:1.2rem;}
 #cluster-insight{
   background:rgba(52,211,153,.05);border:1px solid rgba(52,211,153,.18);
@@ -510,16 +511,19 @@ const TAG_LABELS = {
 async function renderCluster(primary_tag) {
   const card = document.getElementById('cluster-card');
   try {
-    const res = await fetch(`/api/project?cluster_tag=${encodeURIComponent(primary_tag)}`);
+    const uid = me?.user_id ? `&user_id=${encodeURIComponent(me.user_id)}&cluster_rank=true` : '';
+    const res = await fetch(`/api/project?cluster_tag=${encodeURIComponent(primary_tag)}${uid}`);
     const clusterData = await res.json();
     const count = clusterData.count || 1;
+    const rank  = clusterData.rank;
     const label = TAG_LABELS[primary_tag] || '기타';
     const insight = TAG_INSIGHTS[primary_tag] || TAG_INSIGHTS.other;
+    const rankBadge = rank ? `<span id="cluster-rank">${count}명 중 ${rank}위 ${rank === 1 ? '🏆' : rank <= 3 ? '🥈' : '✦'}</span>` : '';
 
     card.innerHTML = `
       <div id="cluster-top">
         <div id="cluster-label">${label} 클러스터</div>
-        <div id="cluster-count">같은 클러스터 ${count}명</div>
+        <div id="cluster-count">같은 클러스터 ${count}명 ${rankBadge}</div>
       </div>
       <div id="cluster-desc">비슷한 문제를 해결하고 있는 사람들과 같은 클러스터에 있어요.<br>집단 데이터 기반 인사이트를 확인해보세요.</div>
       <div id="cluster-insight">
