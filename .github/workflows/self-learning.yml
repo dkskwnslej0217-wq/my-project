@@ -1,0 +1,167 @@
+name: NOVA Self-Learning
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # 매일 오전 11시 KST (02:00 UTC)
+  workflow_dispatch:
+
+jobs:
+  analyze-and-learn:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: 데이터 수집 및 패턴 분석
+        id: analyze
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: |
+          node << 'EOF'
+          const fs = require('fs');
+
+          const SUPA = process.env.SUPABASE_URL;
+          const KEY  = process.env.SUPABASE_SERVICE_KEY;
+          const GROQ = process.env.GROQ_API_KEY;
+          const h    = { 'apikey': KEY, 'Authorization': `Bearer ${KEY}` };
+
+          async function query(path) {
+            const r = await fetch(`${SUPA}/rest/v1/${path}`, { headers: h });
+            return r.json();
+          }
+
+          async function main() {
+            // 데이터 수집
+            const [users, projects, quests, chats] = await Promise.all([
+              query('users?select=user_id,plan_type,daily_count,total_chat_count,invite_count,star_size,created_at&plan_type=neq.admin'),
+              query('projects?select=user_id,primary_tag,created_at&order=created_at.desc&limit=100'),
+              query('user_quests?select=user_id,quest_id,completed_at'),
+              query('chat_history?select=user_id,created_at&order=created_at.desc&limit=200'),
+            ]);
+
+            const now = Date.now();
+            const day = 86400000;
+
+            // 패턴 분석
+            const totalUsers     = users.length;
+            const neverChatted   = users.filter(u => !u.total_chat_count).length;
+            const paidUsers      = users.filter(u => u.plan_type !== 'free').length;
+            const newUsers7d     = users.filter(u => now - new Date(u.created_at) < 7 * day).length;
+            const activeToday    = users.filter(u => u.daily_count > 0).length;
+            const avgStar        = users.length ? (users.reduce((s,u) => s + (u.star_size||1), 0) / users.length).toFixed(2) : 1;
+
+            // 퀘스트 완료율
+            const q1Rate = users.length ? Math.round(quests.filter(q=>q.quest_id==='q1').length / users.length * 100) : 0;
+            const q4Rate = users.length ? Math.round(quests.filter(q=>q.quest_id==='q4').length / users.length * 100) : 0;
+
+            // 클러스터 분포
+            const tagCount = {};
+            for (const p of projects) tagCount[p.primary_tag] = (tagCount[p.primary_tag]||0)+1;
+            const topTag = Object.entries(tagCount).sort((a,b)=>b[1]-a[1])[0];
+
+            const data = {
+              totalUsers, neverChatted, paidUsers, newUsers7d, activeToday, avgStar,
+              q1Rate, q4Rate,
+              topCluster: topTag ? `${topTag[0]}(${topTag[1]}개)` : '없음',
+              conversionRate: totalUsers ? Math.round(paidUsers/totalUsers*100) : 0,
+              churnRisk: neverChatted,
+            };
+
+            // Groq로 인사이트 생성
+            const prompt = `NOVA UNIVERSE SaaS 앱 데이터를 분석해서 가장 중요한 개선점 3가지를 한국어로 짧게 알려줘.
+
+데이터:
+- 전체 유저: ${data.totalUsers}명
+- AI 한 번도 안 쓴 유저: ${data.neverChatted}명 (이탈 위험)
+- 유료 전환: ${data.conversionRate}% (${data.paidUsers}명)
+- 오늘 활성: ${data.activeToday}명
+- 신규 가입(7일): ${data.newUsers7d}명
+- 첫 프로젝트 완료율: ${data.q1Rate}%
+- 초대 완료율: ${data.q4Rate}%
+- 인기 클러스터: ${data.topCluster}
+- 평균 별 크기: ${data.avgStar}
+
+형식: 번호 + 한 줄 문제 + 한 줄 해결책. 3개만.`;
+
+            let insights = '분석 불가';
+            try {
+              const gr = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${GROQ}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  model: 'llama-3.1-8b-instant',
+                  max_tokens: 300,
+                  messages: [{ role: 'user', content: prompt }]
+                })
+              });
+              const gd = await gr.json();
+              insights = gd.choices?.[0]?.message?.content || '분석 불가';
+            } catch(e) { insights = 'Groq 연결 실패'; }
+
+            // 결과 저장
+            const output = { data, insights };
+            fs.writeFileSync('analysis.json', JSON.stringify(output));
+
+            // GitHub Actions output
+            const core = { setOutput: (k,v) => {
+              fs.appendFileSync(process.env.GITHUB_OUTPUT, `${k}<<EOF\n${v}\nEOF\n`);
+            }};
+            core.setOutput('insights', insights);
+            core.setOutput('churn_risk', data.churnRisk);
+            core.setOutput('conversion', data.conversionRate);
+            core.setOutput('active_today', data.activeToday);
+            core.setOutput('total_users', data.totalUsers);
+
+            console.log('분석 완료:', JSON.stringify(data, null, 2));
+            console.log('인사이트:', insights);
+          }
+
+          main().catch(e => { console.error(e); process.exit(1); });
+          EOF
+
+      - name: 이탈 위험 높으면 GitHub Issue 자동 생성
+        if: steps.analyze.outputs.churn_risk > 2
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const churn = '${{ steps.analyze.outputs.churn_risk }}';
+            const insights = `${{ steps.analyze.outputs.insights }}`;
+            const today = new Date().toLocaleDateString('ko-KR');
+
+            // 같은 날짜 이슈 이미 있으면 스킵
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'nova-insight',
+              state: 'open',
+            });
+            if (issues.data.some(i => i.title.includes(today))) {
+              console.log('오늘 이슈 이미 있음, 스킵');
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[${today}] NOVA 자동 분석 — 이탈 위험 ${churn}명`,
+              body: `## 오늘의 NOVA 인사이트\n\n${insights}\n\n---\n*자동 생성 by NOVA Self-Learning*`,
+              labels: ['nova-insight'],
+            });
+
+      - name: Telegram 보고
+        run: |
+          INSIGHTS="${{ steps.analyze.outputs.insights }}"
+          MSG="🧠 <b>NOVA 자가학습 리포트</b>%0A%0A"
+          MSG="${MSG}👥 유저 ${{ steps.analyze.outputs.total_users }}명 · 오늘 활성 ${{ steps.analyze.outputs.active_today }}명%0A"
+          MSG="${MSG}💰 전환율 ${{ steps.analyze.outputs.conversion }}%%0A"
+          MSG="${MSG}⚠️ 이탈위험 ${{ steps.analyze.outputs.churn_risk }}명%0A%0A"
+          MSG="${MSG}<b>💡 개선 인사이트</b>%0A${INSIGHTS}"
+
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d "text=$MSG" \
+            -d "parse_mode=HTML"
