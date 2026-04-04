@@ -81,6 +81,15 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
 #send-btn:hover{opacity:.85;}#send-btn:disabled{opacity:.3;cursor:not-allowed;}
 #send-btn svg{width:16px;height:16px;fill:#fff;}
 
+/* 탭 */
+#chat-tabs{display:flex;gap:.5rem;padding:.6rem 1.4rem .2rem;flex-shrink:0;}
+.chat-tab{font-family:'Orbitron',sans-serif;font-size:.6rem;letter-spacing:.12em;padding:.35rem .9rem;border-radius:20px;border:1px solid rgba(124,58,237,.3);background:transparent;color:rgba(196,181,253,.5);cursor:pointer;transition:.2s;}
+.chat-tab.active{background:rgba(124,58,237,.25);border-color:rgba(124,58,237,.6);color:#c4b5fd;}
+/* 콘텐츠 보관함 */
+.vault-card{background:rgba(109,40,217,.1);border:1px solid rgba(124,58,237,.2);border-radius:12px;padding:1rem;font-size:.82rem;line-height:1.8;color:rgba(255,255,255,.85);white-space:pre-wrap;position:relative;}
+.vault-date{font-size:.62rem;color:rgba(196,181,253,.45);letter-spacing:.08em;margin-bottom:.5rem;}
+.vault-empty{text-align:center;color:rgba(196,181,253,.4);font-size:.78rem;padding:3rem 0;letter-spacing:.08em;}
+
 /* 한도 표시 */
 #limit-bar{display:flex;align-items:center;justify-content:space-between;
   padding:.4rem 1.4rem;font-size:.75rem;letter-spacing:.1em;color:rgba(167,139,250,.75);}
@@ -220,8 +229,17 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
     <div id="profile-note">이 별의 주인만 NOVA와 대화할 수 있습니다</div>
   </div>
 
+  <!-- 탭 -->
+  <div id="chat-tabs">
+    <button class="chat-tab active" onclick="switchTab('chat')" id="tab-chat">대화</button>
+    <button class="chat-tab" onclick="switchTab('content')" id="tab-content">콘텐츠 보관함</button>
+  </div>
+
   <!-- 채팅 뷰 -->
   <div id="messages"></div>
+
+  <!-- 콘텐츠 보관함 뷰 -->
+  <div id="content-vault" style="display:none;flex:1;overflow-y:auto;padding:1.2rem 1.4rem;display:flex;flex-direction:column;gap:1rem;"></div>
   <div id="typing">
     <div class="msg-avatar nova"></div>
     <div class="dot"></div><div class="dot"></div><div class="dot"></div>
@@ -308,8 +326,38 @@ async function loadHistory() {
       headers: { 'x-session-token': token }
     });
     if (res.status === 401) { localStorage.removeItem('nova_user'); localStorage.removeItem('nova_token'); location.href = '/login.html'; return []; }
-    return res.ok ? await res.json() : [];
+    const data = res.ok ? await res.json() : [];
+    _vaultHistory = data;
+    return data;
   } catch { return []; }
+}
+
+// ─── 탭 전환 ──────────────────────────────────────────
+function switchTab(tab) {
+  const isChat = tab === 'chat';
+  document.getElementById('tab-chat').classList.toggle('active', isChat);
+  document.getElementById('tab-content').classList.toggle('active', !isChat);
+  document.getElementById('messages').style.display = isChat ? 'flex' : 'none';
+  document.getElementById('content-vault').style.display = isChat ? 'none' : 'flex';
+  document.getElementById('input-area').style.display = isChat ? '' : 'none';
+  if (!isChat) renderVault();
+}
+
+// ─── 콘텐츠 보관함 렌더 ───────────────────────────────
+let _vaultHistory = [];
+function renderVault() {
+  const vault = document.getElementById('content-vault');
+  // 100자 이상 AI 답변만 = 콘텐츠로 간주
+  const contents = _vaultHistory.filter(h => h.role !== 'user' && (h.content || '').length >= 100);
+  if (!contents.length) {
+    vault.innerHTML = '<div class="vault-empty">아직 저장된 콘텐츠가 없어요.<br>NOVA에게 스크립트나 마케팅 문구를 요청해보세요.</div>';
+    return;
+  }
+  vault.innerHTML = contents.map(h => {
+    const date = h.created_at ? new Date(h.created_at).toLocaleDateString('ko-KR') : '';
+    const preview = h.content.slice(0, 300) + (h.content.length > 300 ? '...' : '');
+    return `<div class="vault-card"><div class="vault-date">${date}</div>${preview}</div>`;
+  }).reverse().join('');
 }
 
 // ─── 메시지 저장 ───────────────────────────────────────
