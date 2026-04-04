@@ -101,7 +101,19 @@ export default async function handler(req) {
       return new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } });
     }
 
-    // ─── 4. 만료 세션 정리 ───────────────────────────────────
+    // ─── 4. 만료 캐시 정리 ───────────────────────────────────
+    if (type === 'cleanup_cache') {
+      const now = new Date().toISOString();
+      await fetch(`${SUPA_URL}/rest/v1/cache?expires_at=lt.${now}`, {
+        method: 'DELETE',
+        headers: { ...h, 'Prefer': 'return=minimal' },
+      });
+      return new Response(JSON.stringify({ ok: true, message: '만료 캐시 정리 완료' }), {
+        headers: { 'content-type': 'application/json' }
+      });
+    }
+
+    // ─── 5. 만료 세션 정리 ───────────────────────────────────
     if (type === 'cleanup_sessions') {
       const now = new Date().toISOString();
       const res = await fetch(`${SUPA_URL}/rest/v1/sessions?expires_at=lt.${now}`, {
