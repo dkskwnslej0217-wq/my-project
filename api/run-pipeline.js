@@ -142,22 +142,23 @@ export default async function handler(req) {
   // 매일 → daily_count 리셋 / 매월 1일 → monthly_count 추가 리셋
   const today = new Date();
   try {
-    const dailyPatch = { daily_count: 0 };
-    if (today.getDate() === 1) dailyPatch.monthly_count = 0;
-    await fetch(`${SUPA_URL}/rest/v1/users`, {
-      method: 'PATCH',
-      headers: {
-        'apikey': SUPA_KEY,
-        'Authorization': `Bearer ${SUPA_KEY}`,
-        'Content-Type': 'application/json',
-        'Prefer': 'return=minimal',
-      },
-      body: JSON.stringify(dailyPatch),
-    });
-    const resetMsg = today.getDate() === 1
-      ? `✅ 일/월 사용량 초기화 완료 (${today.toISOString().slice(0, 7)})`
-      : `✅ 일 사용량 초기화 완료 (${today.toISOString().slice(0, 10)})`;
-    await tg(resetMsg);
+    if (today.getDate() === 1) {
+      // 월 1일: last_month_count 백업 + monthly_count 리셋 (원자적 RPC)
+      await fetch(`${SUPA_URL}/rest/v1/rpc/reset_monthly_counts`, {
+        method: 'POST',
+        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      await tg(`✅ 일/월 사용량 초기화 완료 (${today.toISOString().slice(0, 7)})`);
+    } else {
+      // 매일: daily_count만 리셋
+      await fetch(`${SUPA_URL}/rest/v1/users`, {
+        method: 'PATCH',
+        headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ daily_count: 0 }),
+      });
+      await tg(`✅ 일 사용량 초기화 완료 (${today.toISOString().slice(0, 10)})`);
+    }
   } catch(e) {
     await tg(`⚠️ 사용량 초기화 실패\n${e.message}`);
   }
