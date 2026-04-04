@@ -118,12 +118,13 @@ export default async function handler(req) {
     }).catch(() => {});
   }
 
-  // 세션 토큰 발급
+  // 세션 토큰 발급 (30일 만료)
   const token = crypto.randomUUID();
+  const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   await fetch(`${SUPA_URL}/rest/v1/sessions`, {
     method: 'POST',
     headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token, user_id })
+    body: JSON.stringify({ token, user_id, expires_at })
   }).catch(() => {});
 
   return new Response(JSON.stringify({

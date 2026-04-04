@@ -12,7 +12,8 @@
     { "source": "/privacy", "destination": "/privacy.html" }
   ],
   "crons": [
-    { "path": "/api/alert?type=reset_daily", "schedule": "0 15 * * *" },
+    { "path": "/api/alert?type=reset_daily",      "schedule": "0 15 * * *" },
+    { "path": "/api/alert?type=cleanup_sessions", "schedule": "0 16 * * *" },
     { "path": "/api/alert?type=summary",   "schedule": "5 15 * * *"  },
     { "path": "/api/alert?type=churn",     "schedule": "0 2 * * *" },
     { "path": "/api/healthcheck?notify=1", "schedule": "0 0 * * *"  }

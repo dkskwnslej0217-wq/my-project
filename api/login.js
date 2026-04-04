@@ -62,12 +62,13 @@ export default async function handler(req) {
 
   delete user.password_hash;
 
-  // 세션 토큰 발급
+  // 세션 토큰 발급 (30일 만료)
   const token = crypto.randomUUID();
+  const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
   await fetch(`${SUPA_URL}/rest/v1/sessions`, {
     method: 'POST',
     headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token, user_id: user.user_id })
+    body: JSON.stringify({ token, user_id: user.user_id, expires_at })
   }).catch(() => {});
 
   // 별 성장 로직: invite_count → star_size 자동 갱신

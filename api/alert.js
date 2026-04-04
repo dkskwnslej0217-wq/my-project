@@ -101,7 +101,20 @@ export default async function handler(req) {
       return new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } });
     }
 
-    // ─── 4. 일일 한도 리셋 (매일 자정) ──────────────────────
+    // ─── 4. 만료 세션 정리 ───────────────────────────────────
+    if (type === 'cleanup_sessions') {
+      const now = new Date().toISOString();
+      const res = await fetch(`${SUPA_URL}/rest/v1/sessions?expires_at=lt.${now}`, {
+        method: 'DELETE',
+        headers: { ...h, 'Prefer': 'return=minimal' },
+      });
+      if (!res.ok) throw new Error(`session cleanup failed: ${res.status}`);
+      return new Response(JSON.stringify({ ok: true, message: '만료 세션 정리 완료' }), {
+        headers: { 'content-type': 'application/json' }
+      });
+    }
+
+    // ─── 5. 일일 한도 리셋 (매일 자정) ──────────────────────
     if (type === 'reset_daily') {
       const res = await fetch(`${SUPA_URL}/rest/v1/users?plan_type=neq.admin`, {
         method: 'PATCH',
