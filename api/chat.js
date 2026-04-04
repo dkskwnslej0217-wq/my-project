@@ -202,6 +202,35 @@ export default async function handler(req) {
   let answer = null;
   let usedModel = null;
 
+  // ─── 캐시 조회 (히스토리 없는 단순 질문만) ──────────────
+  const canCache = historyMsgs.length === 0 && query.length >= 10;
+  const cacheHash = canCache ? await (async () => {
+    const normalized = query.trim().toLowerCase();
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(normalized));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+  })() : null;
+
+  if (cacheHash) {
+    try {
+      const cRes = await fetch(
+        `${process.env.SUPABASE_URL}/rest/v1/cache?hash=eq.${cacheHash}&select=content,hit_count&limit=1`,
+        { headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}` } }
+      );
+      const cData = await cRes.json();
+      if (cData[0]?.content) {
+        // 캐시 히트 — hit_count 증가 (fire & forget)
+        fetch(`${process.env.SUPABASE_URL}/rest/v1/cache?hash=eq.${cacheHash}`, {
+          method: 'PATCH',
+          headers: { 'apikey': process.env.SUPABASE_SERVICE_KEY, 'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+          body: JSON.stringify({ hit_count: (cData[0].hit_count ?? 0) + 1 }),
+        });
+        return new Response(JSON.stringify({ reply: cData[0].content, model: 'cache', usage: usageInfo }), {
+          status: 200, headers: { 'Content-Type': 'application/json', 'X-Content-Type-Options': 'nosniff' },
+        });
+      }
+    } catch { /* 캐시 실패 시 AI로 진행 */ }
+  }
+
   // ─── 플랫폼 레벨 모델 우선 시도 (Claude) ────────────────
   const activeModel = await getActiveModel();
   const claudeModelId = CLAUDE_MODELS[activeModel];
@@ -253,6 +282,21 @@ export default async function handler(req) {
 
   if (!answer) {
     answer = 'AI가 일시적으로 응답하지 못하고 있습니다. 잠시 후 다시 시도해주세요.';
+  }
+
+  // ─── 캐시 저장 (AI 응답 성공 + 캐시 가능한 질문) ────────
+  if (cacheHash && answer && usedModel) {
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    fetch(`${process.env.SUPABASE_URL}/rest/v1/cache`, {
+      method: 'POST',
+      headers: {
+        'apikey': process.env.SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=ignore-duplicates',
+      },
+      body: JSON.stringify({ hash: cacheHash, topic: query.slice(0, 100), content: answer, hit_count: 0, expires_at: expires }),
+    });
   }
 
   return new Response(JSON.stringify({ reply: answer, model: usedModel, usage: usageInfo }), {
