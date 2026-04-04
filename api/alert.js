@@ -101,6 +101,19 @@ export default async function handler(req) {
       return new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } });
     }
 
+    // ─── 4. 일일 한도 리셋 (매일 자정) ──────────────────────
+    if (type === 'reset_daily') {
+      const res = await fetch(`${SUPA_URL}/rest/v1/users?plan_type=neq.admin`, {
+        method: 'PATCH',
+        headers: { ...h, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ daily_count: 0 }),
+      });
+      if (!res.ok) throw new Error(`reset failed: ${res.status}`);
+      return new Response(JSON.stringify({ ok: true, message: 'daily_count 리셋 완료' }), {
+        headers: { 'content-type': 'application/json' }
+      });
+    }
+
     return new Response(JSON.stringify({ error: '알 수 없는 type' }), { status: 400 });
 
   } catch (e) {

@@ -7,11 +7,14 @@
     { "source": "/budget",   "destination": "/output/budget/index.html"   },
     { "source": "/upgrade",  "destination": "/output/upgrade/index.html"  },
     { "source": "/upgrade/success", "destination": "/output/upgrade/success.html" },
-    { "source": "/admin",  "destination": "/output/admin/index.html"  }
+    { "source": "/admin",  "destination": "/output/admin/index.html"  },
+    { "source": "/terms",   "destination": "/terms.html"   },
+    { "source": "/privacy", "destination": "/privacy.html" }
   ],
   "crons": [
-    { "path": "/api/alert?type=summary",   "schedule": "0 0 * * *"  },
-    { "path": "/api/alert?type=churn",     "schedule": "0 11 * * *" },
-    { "path": "/api/healthcheck?notify=1", "schedule": "0 9 * * *"  }
+    { "path": "/api/alert?type=reset_daily", "schedule": "0 15 * * *" },
+    { "path": "/api/alert?type=summary",   "schedule": "5 15 * * *"  },
+    { "path": "/api/alert?type=churn",     "schedule": "0 2 * * *" },
+    { "path": "/api/healthcheck?notify=1", "schedule": "0 0 * * *"  }
   ]
 }

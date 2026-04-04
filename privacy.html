@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>개인정보처리방침 — NOVA UNIVERSE</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000005;color:#e2d9f3;font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;
+  line-height:1.9;padding:3rem 1.5rem 6rem;font-size:.95rem;}
+.wrap{max-width:720px;margin:0 auto;}
+h1{font-family:'Orbitron',sans-serif;font-size:1.3rem;letter-spacing:.2em;color:#fff;
+  margin-bottom:.4rem;text-shadow:0 0 20px #7c3aed;}
+.subtitle{font-size:.78rem;color:rgba(167,139,250,.5);letter-spacing:.1em;margin-bottom:2.5rem;}
+h2{font-size:1rem;font-weight:700;color:#c4b5fd;margin:2.2rem 0 .7rem;
+  border-left:2px solid #7c3aed;padding-left:.8rem;}
+p{color:rgba(226,217,243,.75);margin-bottom:.9rem;}
+ul{padding-left:1.4rem;color:rgba(226,217,243,.7);margin-bottom:.9rem;}
+li{margin-bottom:.4rem;}
+table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:.88rem;}
+th{background:rgba(109,40,217,.2);color:#c4b5fd;padding:.5rem .8rem;text-align:left;
+  border:1px solid rgba(139,92,246,.2);}
+td{padding:.5rem .8rem;border:1px solid rgba(139,92,246,.15);color:rgba(226,217,243,.7);}
+a{color:#a78bfa;text-decoration:none;}
+.back{display:inline-block;margin-bottom:2rem;font-family:'Orbitron',sans-serif;
+  font-size:.72rem;letter-spacing:.12em;color:rgba(167,139,250,.6);
+  border:1px solid rgba(139,92,246,.25);border-radius:6px;padding:.3rem .7rem;}
+.divider{border:none;border-top:1px solid rgba(139,92,246,.15);margin:2rem 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">← NOVA UNIVERSE</a>
+  <h1>개인정보처리방침</h1>
+  <div class="subtitle">최종 수정일: 2026년 4월 4일 · 시행일: 2026년 4월 4일</div>
+
+  <h2>1. 수집하는 개인정보</h2>
+  <table>
+    <tr><th>항목</th><th>수집 목적</th><th>보유 기간</th></tr>
+    <tr><td>이메일</td><td>계정 식별, 공지 발송</td><td>회원 탈퇴 시까지</td></tr>
+    <tr><td>닉네임</td><td>서비스 내 표시</td><td>회원 탈퇴 시까지</td></tr>
+    <tr><td>비밀번호(해시)</td><td>본인 인증</td><td>회원 탈퇴 시까지</td></tr>
+    <tr><td>AI 채팅 내역</td><td>서비스 제공, 품질 개선</td><td>1년 또는 탈퇴 시</td></tr>
+    <tr><td>접속 IP, 이용 기록</td><td>부정 이용 방지, 보안</td><td>6개월</td></tr>
+  </table>
+
+  <h2>2. 개인정보 수집 방법</h2>
+  <ul>
+    <li>회원가입 시 직접 입력</li>
+    <li>서비스 이용 과정에서 자동 수집 (IP, 접속 시간)</li>
+  </ul>
+
+  <h2>3. 개인정보의 제3자 제공</h2>
+  <p>원칙적으로 개인정보를 외부에 제공하지 않습니다. 단, 다음의 경우 예외입니다:</p>
+  <ul>
+    <li>법령에 의거하거나 수사기관의 요청이 있는 경우</li>
+    <li>서비스 운영을 위한 외부 위탁 (Supabase 데이터베이스, Vercel 서버 호스팅)</li>
+  </ul>
+
+  <h2>4. 개인정보 처리 위탁</h2>
+  <table>
+    <tr><th>수탁 업체</th><th>위탁 업무</th></tr>
+    <tr><td>Supabase Inc.</td><td>데이터베이스 저장 및 관리</td></tr>
+    <tr><td>Vercel Inc.</td><td>서버 호스팅 및 배포</td></tr>
+    <tr><td>Groq Inc. / Anthropic / Google</td><td>AI 응답 생성 (채팅 내용 전달)</td></tr>
+  </table>
+
+  <h2>5. 이용자의 권리</h2>
+  <p>이용자는 언제든지 다음을 요청할 수 있습니다:</p>
+  <ul>
+    <li>개인정보 열람, 수정, 삭제</li>
+    <li>처리 정지</li>
+    <li>회원 탈퇴 및 데이터 삭제</li>
+  </ul>
+  <p>요청 방법: 서비스 내 피드백 버튼 → 개인정보 관련으로 문의</p>
+
+  <h2>6. 개인정보 보호 조치</h2>
+  <ul>
+    <li>비밀번호 단방향 암호화(해시) 저장</li>
+    <li>세션 토큰 기반 인증, 만료 자동 처리</li>
+    <li>Supabase Row Level Security(RLS) 적용</li>
+    <li>HTTPS 통신 암호화</li>
+  </ul>
+
+  <h2>7. 쿠키 및 로컬스토리지</h2>
+  <p>서비스는 쿠키 대신 브라우저 로컬스토리지를 사용합니다. 로그인 정보(세션 토큰)가 저장되며, 브라우저 설정에서 삭제 가능합니다.</p>
+
+  <h2>8. 개인정보 보호 책임자</h2>
+  <p>개인정보 관련 문의는 서비스 내 피드백 버튼을 이용해주세요.</p>
+
+  <h2>9. 방침 변경</h2>
+  <p>개인정보처리방침 변경 시 서비스 공지사항을 통해 7일 전 고지합니다.</p>
+
+  <hr class="divider"/>
+  <p style="font-size:.82rem;color:rgba(167,139,250,.45);">NOVA UNIVERSE | 문의: 서비스 내 피드백 버튼</p>
+</div>
+</body>
+</html>
