@@ -1015,10 +1015,19 @@ async function obNext(){
             replyEl.style.display='block';
             replyEl.textContent=`"${data.project.title}" 프로젝트 생성! ${data.cluster.label} 클러스터에 연결됐어요.`;
           }
+        } else {
+          // 비로그인: 가입 유도
+          const replyEl=document.getElementById('ob-nova-reply');
+          replyEl.style.display='block';
+          replyEl.textContent='좋아요! 가입하면 NOVA가 이 문제를 위한 프로젝트를 바로 만들어드려요. 무료로 30번 사용 가능합니다.';
         }
       }catch{}
-      btn.disabled=false;btn.textContent='우주 탐험 시작 →';
-      btn.onclick=obDone;return;
+      btn.disabled=false;
+      const raw=localStorage.getItem('nova_user');
+      const isLoggedIn=raw&&JSON.parse(raw).user_id;
+      if(isLoggedIn){btn.textContent='우주 탐험 시작 →';btn.onclick=obDone;}
+      else{btn.textContent='무료로 시작하기 →';btn.onclick=()=>location.href='/login.html';}
+      return;
     }
   }
   if(obStep<OB_STEPS.length-1){obStep++;obRender();}
@@ -1028,10 +1037,9 @@ function obDone(){
   document.getElementById('onboard').classList.remove('open');
   localStorage.setItem('nova_onboarded','1');
 }
-// 신규 가입 감지: ?star= 파라미터 + onboarded 플래그 없음
+// 신규 방문자 감지: onboarded 플래그 없으면 무조건 온보딩
 (function(){
-  const isNew=new URLSearchParams(location.search).has('star')&&!localStorage.getItem('nova_onboarded');
-  if(!isNew)return;
+  if(localStorage.getItem('nova_onboarded'))return;
   obRender();
   setTimeout(()=>document.getElementById('onboard').classList.add('open'),2500);
 })();
