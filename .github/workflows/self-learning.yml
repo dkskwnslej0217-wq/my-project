@@ -26,10 +26,11 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          PIPELINE_SECRET: ${{ secrets.PIPELINE_SECRET }}
         run: node scripts/analyze.js
 
-      - name: GitHub Issue 자동 생성 (이탈위험 3명 초과 시)
-        if: steps.analyze.outputs.churn_risk > 2
+      - name: GitHub Issue 자동 생성 (승인된 경우만)
+        if: steps.analyze.outputs.create_issue == 'true'
         uses: actions/github-script@v7
         with:
           script: |

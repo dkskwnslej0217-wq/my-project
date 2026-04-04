@@ -93,13 +93,54 @@ async function main() {
   console.log('=== 인사이트 ===');
   console.log(insights);
 
-  // GitHub Actions output 설정
+    // GitHub Actions output 설정
   setOutput('insights', insights);
   setOutput('churn_risk', String(neverChatted));
   setOutput('conversion', String(conversionRate));
   setOutput('active_today', String(activeToday));
   setOutput('total_users', String(totalUsers));
   setOutput('summary_json', JSON.stringify(summary));
+
+  // 이탈위험 3명 초과 → Telegram 승인 요청 후 GitHub Issue 생성
+  if (neverChatted > 2) {
+    const PIPELINE_SECRET = process.env.PIPELINE_SECRET;
+    const BASE_URL = 'https://my-project-xi-sand-93.vercel.app';
+
+    try {
+      // 승인 요청
+      const approvalRes = await fetch(`${BASE_URL}/api/request-approval`, {
+        method: 'POST',
+        headers: { 'x-pipeline-secret': PIPELINE_SECRET, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action_type: 'github-issue',
+          description: `이탈위험 ${neverChatted}명 감지\n\n💡 개선 인사이트:\n${insights}\n\nGitHub Issue 자동 생성할까요?`,
+          payload: { churn_risk: neverChatted, insights },
+        }),
+      });
+      const { approval_id } = await approvalRes.json();
+      console.log(`승인 요청 전송됨. approval_id: ${approval_id}`);
+
+      // 최대 10분 폴링 (30초 간격 × 20회)
+      let approved = false;
+      for (let i = 0; i < 20; i++) {
+        await new Promise(r => setTimeout(r, 30000));
+        const checkRes = await fetch(`${BASE_URL}/api/check-approval?id=${approval_id}`, {
+          headers: { 'x-pipeline-secret': PIPELINE_SECRET },
+        });
+        const { status } = await checkRes.json();
+        console.log(`[${i + 1}/20] 승인 상태: ${status}`);
+        if (status === 'approved') { approved = true; break; }
+        if (status === 'rejected') { console.log('거부됨 — Issue 생성 취소'); break; }
+      }
+
+      setOutput('create_issue', approved ? 'true' : 'false');
+    } catch (e) {
+      console.error('승인 요청 실패:', e.message);
+      setOutput('create_issue', 'false');
+    }
+  } else {
+    setOutput('create_issue', 'false');
+  }
 }
 
 main().catch(e => { console.error(e); process.exit(1); });
