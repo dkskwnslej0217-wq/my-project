@@ -1,7 +1,7 @@
 // NOVA 자가학습 분석 스크립트
 // GitHub Actions에서 실행: node scripts/analyze.js
 
-const fs = require('fs');
+import { appendFileSync } from 'fs';
 
 const SUPA = process.env.SUPABASE_URL;
 const KEY  = process.env.SUPABASE_SERVICE_KEY;
@@ -15,7 +15,7 @@ async function query(path) {
 }
 
 function setOutput(key, value) {
-  fs.appendFileSync(process.env.GITHUB_OUTPUT || '/dev/null', `${key}<<EOF\n${value}\nEOF\n`);
+  appendFileSync(process.env.GITHUB_OUTPUT || '/dev/null', `${key}<<EOF\n${value}\nEOF\n`);
 }
 
 async function main() {
