@@ -9,7 +9,9 @@
     { "source": "/upgrade/success", "destination": "/output/upgrade/success.html" },
     { "source": "/admin",  "destination": "/output/admin/index.html"  },
     { "source": "/terms",   "destination": "/terms.html"   },
-    { "source": "/privacy", "destination": "/privacy.html" }
+    { "source": "/privacy", "destination": "/privacy.html" },
+    { "source": "/notice",  "destination": "/notice.html"  },
+    { "source": "/account", "destination": "/login.html"   }
   ],
   "crons": [
     { "path": "/api/alert?type=reset_daily",      "schedule": "0 15 * * *" },

@@ -403,8 +403,8 @@ function addMsg(role, text) {
 
   // 초기 limit-bar
   if (isOwner && profile.daily_count !== undefined) {
-    const limits = { free: 5, starter: 50, pro: 300 };
-    const lim = limits[profile.plan_type] ?? 5;
+    const limits = { free: 30, starter: 100, pro: 500 };
+    const lim = limits[profile.plan_type] ?? 30;
     updateLimitBar(profile.daily_count ?? 0, lim);
   }
 
@@ -430,9 +430,17 @@ function addMsg(role, text) {
   function updateLimitBar(count, limit) {
     document.getElementById('limit-text').textContent = '오늘 사용량';
     const remaining = Math.max(0, limit - count);
+    const pct = limit > 0 ? count / limit : 0;
     const el = document.getElementById('limit-count');
     el.textContent = `${count} / ${limit}회`;
-    el.style.color = remaining === 0 ? '#f87171' : remaining <= 2 ? '#fbbf24' : 'rgba(139,92,246,.5)';
+    el.style.color = remaining === 0 ? '#f87171' : pct >= 0.8 ? '#fbbf24' : 'rgba(139,92,246,.5)';
+    // 80% 이상 — 업그레이드 넛지 배너 표시
+    const upgradeBar = document.getElementById('upgrade-bar');
+    const upgradeMsg = document.getElementById('upgrade-msg');
+    if (pct >= 0.8 && remaining > 0) {
+      upgradeMsg.textContent = `오늘 한도의 ${Math.round(pct*100)}% 사용했어요. 더 쓰려면 업그레이드하세요.`;
+      upgradeBar.classList.add('show');
+    }
   }
 
   // 본인 워크스페이스 — 히스토리 로드
