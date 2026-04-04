@@ -1,0 +1,85 @@
+name: NOVA Daily Health Check
+
+on:
+  schedule:
+    - cron: '0 1 * * *'   # 매일 오전 10시 KST (01:00 UTC)
+  workflow_dispatch:        # 수동 실행 버튼
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint 검사
+        id: eslint
+        run: |
+          npx eslint api/ --format json > eslint-result.json 2>&1 || true
+          ERROR_COUNT=$(cat eslint-result.json | node -e "
+            const d = JSON.parse(require('fs').readFileSync('/dev/stdin','utf8'));
+            console.log(d.reduce((s,f)=>s+f.errorCount,0));
+          " 2>/dev/null || echo "0")
+          echo "errors=$ERROR_COUNT" >> $GITHUB_OUTPUT
+          echo "ESLint 에러: $ERROR_COUNT 개"
+
+      - name: 엔드포인트 점검
+        id: endpoints
+        run: |
+          BASE="https://my-project-xi-sand-93.vercel.app"
+          FAIL=0
+          REPORT=""
+
+          check() {
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "$1")
+            if [ "$STATUS" = "200" ]; then
+              REPORT="$REPORT\n✅ $2 ($STATUS)"
+            else
+              REPORT="$REPORT\n❌ $2 ($STATUS)"
+              FAIL=$((FAIL+1))
+            fi
+          }
+
+          check "$BASE/api/users"    "/api/users"
+          check "$BASE/api/budget"   "/api/budget"
+          check "$BASE/api/platform" "/api/platform"
+          check "$BASE/"             "메인 페이지"
+          check "$BASE/chat"         "/chat"
+          check "$BASE/project"      "/project"
+
+          echo "fail=$FAIL" >> $GITHUB_OUTPUT
+          echo "report<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$REPORT" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Telegram 알림 (문제 있을 때)
+        if: steps.endpoints.outputs.fail != '0' || steps.eslint.outputs.errors != '0'
+        run: |
+          MSG="🚨 <b>NOVA 자동 점검 이상 발견</b>%0A%0A"
+          MSG="${MSG}📋 엔드포인트: ${{ steps.endpoints.outputs.fail }}개 실패%0A"
+          MSG="${MSG}🔍 ESLint 에러: ${{ steps.eslint.outputs.errors }}개%0A%0A"
+          MSG="${MSG}<b>상세:</b>%0A${{ steps.endpoints.outputs.report }}%0A%0A"
+          MSG="${MSG}<i>GitHub Actions • $(date +'%Y-%m-%d %H:%M') UTC</i>"
+
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d "text=$MSG" \
+            -d "parse_mode=HTML"
+
+      - name: Telegram 알림 (전체 정상)
+        if: steps.endpoints.outputs.fail == '0' && steps.eslint.outputs.errors == '0'
+        run: |
+          MSG="✅ <b>NOVA 전체 정상</b>%0A%0A${{ steps.endpoints.outputs.report }}%0A%0AESLINT 에러 없음%0A%0A<i>$(date +'%Y-%m-%d %H:%M') UTC</i>"
+
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d "chat_id=${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d "text=$MSG" \
+            -d "parse_mode=HTML"
