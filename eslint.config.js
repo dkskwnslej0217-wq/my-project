@@ -25,6 +25,8 @@ export default [
         Headers: "readonly",
         FormData: "readonly",
         Blob: "readonly",
+        AbortSignal: "readonly",
+        AbortController: "readonly",
       }
     },
     rules: {
