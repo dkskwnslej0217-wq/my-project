@@ -381,9 +381,26 @@ const typingEl = document.getElementById('typing');
 function addMsg(role, text) {
   const div = document.createElement('div');
   div.className = 'msg ' + (role === 'user' ? 'user' : 'nova');
-  div.innerHTML = `<div class="msg-avatar ${role==='user'?'user-av':'nova'}"></div><div class="msg-bubble">${text.replace(/\n/g,'<br>').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/&lt;br&gt;/g,'<br>')}</div>`;
+  const safeText = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  const shareBtn = role === 'nova' && text.length > 30
+    ? `<button onclick="shareMsg(this)" data-text="${text.replace(/"/g,'&quot;')}" style="margin-top:.5rem;display:block;background:none;border:1px solid rgba(139,92,246,.25);border-radius:6px;color:rgba(167,139,250,.6);font-family:'Orbitron',sans-serif;font-size:.62rem;letter-spacing:.1em;padding:.2rem .6rem;cursor:pointer;" onmouseover="this.style.color='#c4b5fd'" onmouseout="this.style.color='rgba(167,139,250,.6)'">공유</button>`
+    : '';
+  div.innerHTML = `<div class="msg-avatar ${role==='user'?'user-av':'nova'}"></div><div class="msg-bubble">${safeText}${shareBtn}</div>`;
   messagesEl.appendChild(div);
   messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function shareMsg(btn) {
+  const text = btn.getAttribute('data-text');
+  const shareText = `NOVA AI 답변:\n\n${text}\n\n— NOVA UNIVERSE (my-project-xi-sand-93.vercel.app)`;
+  if (navigator.share) {
+    navigator.share({ text: shareText }).catch(() => {});
+  } else {
+    navigator.clipboard.writeText(shareText).then(() => {
+      btn.textContent = '복사됨 ✓';
+      setTimeout(() => btn.textContent = '공유', 1500);
+    });
+  }
 }
 
 // ─── 메인 ────────────────────────────────────────────
