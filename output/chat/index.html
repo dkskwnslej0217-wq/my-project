@@ -303,7 +303,11 @@ async function loadProfile() {
 // ─── 채팅 히스토리 로드 ────────────────────────────────
 async function loadHistory() {
   try {
-    const res = await fetch('/api/history?user_id=' + encodeURIComponent(urlId));
+    const token = localStorage.getItem('nova_token') || '';
+    const res = await fetch('/api/history?user_id=' + encodeURIComponent(urlId), {
+      headers: { 'x-session-token': token }
+    });
+    if (res.status === 401) { localStorage.removeItem('nova_user'); localStorage.removeItem('nova_token'); location.href = '/login.html'; return []; }
     return res.ok ? await res.json() : [];
   } catch { return []; }
 }
@@ -311,9 +315,10 @@ async function loadHistory() {
 // ─── 메시지 저장 ───────────────────────────────────────
 async function saveMsg(role, content) {
   try {
+    const token = localStorage.getItem('nova_token') || '';
     await fetch('/api/history', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-session-token': token },
       body: JSON.stringify({ user_id: urlId, role, content })
     });
   } catch {}

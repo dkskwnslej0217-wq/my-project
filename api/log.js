@@ -18,7 +18,7 @@ export default async function handler(req) {
 
   // 내부 호출 검증 — LOG_SECRET 헤더 확인
   const secret = req.headers.get('x-log-secret') ?? '';
-  if (process.env.LOG_SECRET && secret !== process.env.LOG_SECRET) {
+  if (!process.env.LOG_SECRET || secret !== process.env.LOG_SECRET) {
     return new Response('Unauthorized', { status: 401 });
   }
 
