@@ -45,7 +45,7 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: 'Supabase 저장 실패' }), { status: 500 });
 
   // Telegram 인라인 버튼 메시지 전송
-  const tgRes = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+  await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -59,9 +59,8 @@ export default async function handler(req) {
       },
     }),
   });
-  const tgData = await tgRes.json();
 
-  return new Response(JSON.stringify({ ok: true, approval_id: approval.id, tg: tgData }), {
+  return new Response(JSON.stringify({ ok: true, approval_id: approval.id }), {
     headers: { 'content-type': 'application/json' },
   });
 }
