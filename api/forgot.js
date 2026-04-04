@@ -17,8 +17,35 @@ async function hashPassword(password) {
   return `pbkdf2:${s}:${h}`;
 }
 
+async function isRateLimited(ip) {
+  try {
+    const res = await fetch(`${process.env.SUPABASE_URL}/rest/v1/rpc/check_rate_limit`, {
+      method: 'POST',
+      headers: {
+        'apikey': process.env.SUPABASE_SERVICE_KEY,
+        'Authorization': `Bearer ${process.env.SUPABASE_SERVICE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ p_key: `forgot:${ip}`, p_window: 300, p_limit: 3 }),
+    });
+    const data = await res.json();
+    return data === true;
+  } catch { return false; }
+}
+
 export default async function handler(req) {
   if (req.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+
+  const origin = req.headers.get('origin') ?? '';
+  const allowed = origin === 'https://my-project-xi-sand-93.vercel.app' || origin === '';
+  if (!allowed) return new Response('Forbidden', { status: 403 });
+
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+  if (await isRateLimited(ip)) {
+    return new Response(JSON.stringify({ error: '요청이 너무 많습니다. 5분 후 다시 시도해주세요.' }), {
+      status: 429, headers: { 'Content-Type': 'application/json' }
+    });
+  }
 
   let body;
   try { body = await req.json(); } catch {

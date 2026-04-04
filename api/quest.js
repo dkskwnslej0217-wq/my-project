@@ -109,7 +109,7 @@ export default async function handler(req) {
     const quest = QUESTS.find(q => q.id === quest_id);
     if (!quest) return new Response(JSON.stringify({ error: '퀘스트 없음' }), { status: 404 });
 
-    const ins = await fetch(`${env.SUPABASE_URL}/rest/v1/user_quests`, {
+    await fetch(`${env.SUPABASE_URL}/rest/v1/user_quests`, {
       method: 'POST',
       headers: { ...headers, 'Prefer': 'return=representation,resolution=ignore-duplicates' },
       body: JSON.stringify({ user_id, quest_id })

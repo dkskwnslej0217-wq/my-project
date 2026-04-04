@@ -30,9 +30,10 @@ export default async function handler(req) {
 
     // ─── 1. 이탈 감지 (3일 이상 전 가입 + 오늘 사용 0회) ───
     if (type === 'churn') {
-      const cutoff = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+      // 7일 이상 전 가입 + 총 채팅 0회 = 한 번도 AI를 쓰지 않은 유저
+      const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
       const res = await fetch(
-        `${SUPA_URL}/rest/v1/users?created_at=lt.${cutoff}&daily_count=eq.0&plan_type=neq.admin&select=nickname,plan_type,created_at&order=created_at.asc&limit=20`,
+        `${SUPA_URL}/rest/v1/users?created_at=lt.${cutoff}&total_chat_count=eq.0&plan_type=neq.admin&select=nickname,plan_type,created_at&order=created_at.asc&limit=20`,
         { headers: h }
       );
       const users = await res.json();
@@ -47,10 +48,10 @@ export default async function handler(req) {
       const lines = atRisk.map(u => {
         const days = Math.floor((Date.now() - new Date(u.created_at)) / 86400000);
         const planEmoji = u.plan_type === 'pro' ? '💜' : u.plan_type === 'starter' ? '💙' : '⚪';
-        return `${planEmoji} <b>${u.nickname || '익명'}</b> · 가입 ${days}일째 미사용`;
+        return `${planEmoji} <b>${u.nickname || '익명'}</b> · 가입 ${days}일째 채팅 0회`;
       });
 
-      const msg = `⚠️ <b>이탈 위험 유저 ${atRisk.length}명</b>\n\n${lines.join('\n')}\n\n<i>3일 이상 미접속</i>`;
+      const msg = `⚠️ <b>이탈 위험 유저 ${atRisk.length}명</b>\n\n${lines.join('\n')}\n\n<i>가입 7일+ 경과, AI 미사용</i>`;
       await sendTelegram(TG_TOKEN, TG_CHAT, msg);
 
       return new Response(JSON.stringify({ ok: true, alerted: atRisk.length }), {
@@ -63,7 +64,7 @@ export default async function handler(req) {
       const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
       const [usersRes, chatsRes, newUsersRes] = await Promise.all([
-        fetch(`${SUPA_URL}/rest/v1/users?select=plan`, { headers: h }),
+        fetch(`${SUPA_URL}/rest/v1/users?select=plan_type`, { headers: h }),
         fetch(`${SUPA_URL}/rest/v1/users?select=daily_count`, { headers: h }),
         fetch(`${SUPA_URL}/rest/v1/users?created_at=gt.${yesterday}&select=user_id`, { headers: h }),
       ]);
@@ -75,7 +76,7 @@ export default async function handler(req) {
       const planCounts = { free: 0, starter: 0, pro: 0 };
       for (const u of (Array.isArray(users) ? users : [])) {
         const p = u.plan_type || 'free';
-        if (p in planCounts) planCounts[p]++;
+        planCounts[p] = (planCounts[p] || 0) + 1;
       }
       const totalUsers    = planCounts.free + planCounts.starter + planCounts.pro;
       const totalChats    = (Array.isArray(chats) ? chats : []).reduce((s, u) => s + (u.daily_count || 0), 0);

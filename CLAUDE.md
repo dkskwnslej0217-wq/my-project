@@ -217,6 +217,35 @@ MAKE_SHEETS_WEBHOOK·PIPELINE_SECRET·ALERT_SECRET·MASTER_PASSWORD
 
 ---
 
+## 🔗 파일 수정 시 연쇄 영향 지도 (수정 전 반드시 확인)
+
+| 수정 파일 | 영향받는 파일 | 확인사항 |
+|-----------|--------------|---------|
+| api/chat.js | output/chat/index.html, output/universe/index.html | 응답 형식·필드명 변경 시 프론트 fetch 파싱 깨짐 |
+| api/login.js | login.html | 응답 필드(session_token, user_id 등) 변경 시 로그인 흐름 깨짐 |
+| api/signup.js | login.html | 동일 |
+| api/project.js | index.html, output/project/index.html | GET/POST/PATCH 각각 다른 화면에서 호출 |
+| api/users.js | index.html | 3D 별 렌더링 데이터 — 필드 변경 시 Three.js 오류 |
+| api/platform.js | index.html | 플랫폼레벨 표시 — active_model 필드 의존 |
+| api/quest.js | output/project/index.html | 퀘스트 7개 구조 고정 |
+| api/stats.js | output/project/index.html | 통계 카드 렌더링 |
+| api/vote.js | output/project/index.html | 투표 버튼 |
+| api/history.js | output/chat/index.html | 채팅 히스토리 목록 |
+| api/budget.js | output/budget/index.html | 예산 데이터 |
+| api/subscribe.js | output/universe/index.html | 구독 플랜 변경 |
+| api/payment.js | output/upgrade/success.html | 결제 완료 후 처리 |
+| api/track.js | index.html | 방문 추적 |
+| api/search-user.js | index.html | 유저 검색 |
+
+**세션 인증(session_token) 사용 API:** chat, history, login, payment, project, quest, signup, stats, vote
+→ 세션 검증 로직 변경 시 위 9개 전부 영향
+
+**공통 주의:**
+- API 응답 JSON 필드명 바꾸면 → 해당 HTML의 `.field명` 접근 코드 동시 수정 필수
+- Edge runtime 파일에서 `req.body` 쓰면 → 즉시 배포 오류 (Edge는 `request.json()` 사용)
+
+---
+
 ## 미완성 (우선순위)
 1. 토스페이먼츠 결제 자동화
 2. Make.com 시나리오2: tts→ffmpeg→업로드

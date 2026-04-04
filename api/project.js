@@ -65,7 +65,22 @@ export default async function handler(req) {
   const url = new URL(req.url);
 
   // GET /api/project?user_id=xxx — 프로젝트 목록
+  // GET /api/project?cluster_tag=xxx — 클러스터 실집계
   if (req.method === 'GET') {
+    const cluster_tag = url.searchParams.get('cluster_tag');
+    if (cluster_tag) {
+      const res = await fetch(
+        `${env.SUPABASE_URL}/rest/v1/projects?primary_tag=eq.${encodeURIComponent(cluster_tag)}&select=user_id`,
+        { headers }
+      );
+      const data = await res.json();
+      const uniqueUsers = new Set(data.map(p => p.user_id)).size;
+      const totalProjects = data.length;
+      return new Response(JSON.stringify({ count: uniqueUsers, project_count: totalProjects, tag: cluster_tag }), {
+        headers: { 'content-type': 'application/json' }
+      });
+    }
+
     const user_id = url.searchParams.get('user_id');
     if (!user_id) return new Response(JSON.stringify({ error: 'user_id required' }), { status: 400 });
 

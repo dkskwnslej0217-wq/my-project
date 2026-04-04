@@ -84,7 +84,7 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: '계정 생성 실패. 다시 시도해주세요.' }), { status: 500 });
   }
 
-  const [user] = await insert.json();
+  await insert.json();
 
   // 레퍼럴 기록
   if (referrer_id) {

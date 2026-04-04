@@ -80,7 +80,7 @@ export default async function handler(req) {
   );
 
   if (!updateRes.ok) {
-    const err = await updateRes.text();
+    await updateRes.text();
     // 결제는 됐는데 DB 업데이트 실패 — 텔레그램 긴급 알림
     const TG_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
     const TG_CHAT = process.env.TELEGRAM_CHAT_ID;

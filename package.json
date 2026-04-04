@@ -2,5 +2,12 @@
   "type": "module",
   "dependencies": {
     "googleapis": "^171.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.2.0"
+  },
+  "scripts": {
+    "lint": "eslint api/*.js",
+    "lint:fix": "eslint api/*.js --fix"
   }
 }

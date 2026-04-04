@@ -57,6 +57,12 @@ h1{font-size:clamp(1rem,2.5vw,1.4rem);font-weight:900;letter-spacing:.3em;
       headers: { 'Content-Type': 'application/json', 'x-session-token': localStorage.getItem('nova_token') || '' },
       body: JSON.stringify({ paymentKey, orderId, amount: Number(amount), plan, user_id }),
     });
+    if (res.status === 401) {
+      localStorage.removeItem('nova_user');
+      localStorage.removeItem('nova_token');
+      location.href = '/login.html';
+      return;
+    }
     const data = await res.json();
 
     if (data.ok) {

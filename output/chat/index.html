@@ -424,6 +424,13 @@ function addMsg(role, text) {
         headers: { 'Content-Type': 'application/json', 'x-session-token': token },
         body: JSON.stringify({ message: text, history: conversationHistory.slice(-10), user_id: me?.user_id ?? null })
       });
+      if (res.status === 401) {
+        localStorage.removeItem('nova_user');
+        localStorage.removeItem('nova_token');
+        location.href = '/login';
+        return;
+      }
+
       const data = await res.json();
       typingEl.classList.remove('show');
 

@@ -1,6 +1,6 @@
 export const config = { runtime: 'edge' };
 
-export default async function handler(req) {
+export default async function handler(_req) {
   const SUPA_URL = process.env.SUPABASE_URL;
   const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 
