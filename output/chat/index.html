@@ -418,6 +418,12 @@ function shareMsg(btn) {
   badge.textContent = (profile.plan_type || 'free').toUpperCase();
   if (profile.plan_type === 'pro') badge.classList.add('pro');
 
+  // 비오너면 배지 숨기기
+  if (!isOwner) {
+    document.getElementById('ctx-badge').style.display = 'none';
+    document.getElementById('ctx-badge-empty').style.display = 'none';
+  }
+
   // 비즈니스 컨텍스트 배지
   if (isOwner) {
     try {

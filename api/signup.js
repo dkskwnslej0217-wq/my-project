@@ -115,6 +115,41 @@ export default async function handler(req) {
   // Resend 이메일 발송
   const RESEND_KEY = process.env.RESEND_API_KEY;
   const FROM = process.env.RESEND_FROM || 'NOVA UNIVERSE <onboarding@resend.dev>';
+
+  // RESEND 키 없으면 이메일 인증 스킵 — 바로 세션 토큰 발급
+  if (!RESEND_KEY) {
+    await fetch(`${SUPA_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(user_id)}`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email_verified: true })
+    }).catch(() => {});
+
+    const token = crypto.randomUUID();
+    const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+    await fetch(`${SUPA_URL}/rest/v1/sessions`, {
+      method: 'POST',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, user_id, expires_at })
+    }).catch(() => {});
+
+    // Telegram 알림
+    const TG_TOKEN2 = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+    const TG_CHAT2 = process.env.TELEGRAM_CHAT_ID;
+    if (TG_TOKEN2 && TG_CHAT2) {
+      fetch(`https://api.telegram.org/bot${TG_TOKEN2}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TG_CHAT2, text: `🌟 <b>신규 유저 가입!</b>\n닉네임: <b>${nickname}</b>\n이메일: ${email}\n플랜: free${referrer_id ? '\n레퍼럴: ' + referrer_id : ''}`, parse_mode: 'HTML' })
+      }).catch(() => {});
+    }
+
+    return new Response(JSON.stringify({
+      user_id, nickname,
+      needs_verification: false,
+      user: { user_id, nickname, email, plan_type: 'free', star_color: color, star_size: 1.0, star_x: star.x, star_y: star.y, star_z: star.z, invite_count: 0 },
+      token
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
+
   if (RESEND_KEY) {
     fetch('https://api.resend.com/emails', {
       method: 'POST',
