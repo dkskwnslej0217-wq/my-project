@@ -188,13 +188,13 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
       <div class="plan-card">
         <div class="plan-name">STARTER</div>
         <div class="plan-price">₩4,900<span style="font-size:.38rem;color:rgba(167,139,250,.4)">/월</span></div>
-        <div class="plan-limit">50회/일<br>기본 AI 모델</div>
+        <div class="plan-limit">100회/일<br>기본 AI 모델</div>
       </div>
       <div class="plan-card hot">
         <div class="plan-hot-badge">POPULAR</div>
         <div class="plan-name">PRO</div>
         <div class="plan-price">₩14,900<span style="font-size:.38rem;color:rgba(167,139,250,.4)">/월</span></div>
-        <div class="plan-limit">300회/일<br>최상위 AI 모델</div>
+        <div class="plan-limit">500회/일<br>최상위 AI 모델</div>
       </div>
     </div>
     <button id="upgrade-contact" onclick="contactUpgrade()">플랜 업그레이드 →</button>
@@ -213,6 +213,8 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
       </div>
     </div>
     <div id="header-right">
+      <a id="ctx-badge" href="/project" title="내 AI 컨텍스트 설정" style="display:none;font-size:.62rem;letter-spacing:.1em;padding:.28rem .6rem;border-radius:20px;border:1px solid rgba(52,211,153,.3);color:rgba(52,211,153,.85);text-decoration:none;white-space:nowrap;transition:.2s;">⚡ AI설정됨</a>
+      <a id="ctx-badge-empty" href="/project" title="내 비즈니스를 AI에 알려주세요" style="font-size:.62rem;letter-spacing:.1em;padding:.28rem .6rem;border-radius:20px;border:1px solid rgba(139,92,246,.25);color:rgba(167,139,250,.5);text-decoration:none;white-space:nowrap;transition:.2s;">AI설정 +</a>
       <span id="plan-badge">FREE</span>
     </div>
   </div>
@@ -415,6 +417,23 @@ function shareMsg(btn) {
   const badge = document.getElementById('plan-badge');
   badge.textContent = (profile.plan_type || 'free').toUpperCase();
   if (profile.plan_type === 'pro') badge.classList.add('pro');
+
+  // 비즈니스 컨텍스트 배지
+  if (isOwner) {
+    try {
+      const token = localStorage.getItem('nova_token') || '';
+      const pRes = await fetch('/api/profile?user_id=' + encodeURIComponent(me.user_id), {
+        headers: { 'x-session-token': token }
+      });
+      if (pRes.ok) {
+        const pData = await pRes.json();
+        if (pData.business_context) {
+          document.getElementById('ctx-badge').style.display = '';
+          document.getElementById('ctx-badge-empty').style.display = 'none';
+        }
+      }
+    } catch {}
+  }
 
   // 초기 limit-bar
   if (isOwner && profile.daily_count !== undefined) {

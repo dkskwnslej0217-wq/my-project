@@ -45,7 +45,7 @@ async function callGroq(modelId, messages, apiKey) {
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: modelId, messages, max_tokens: 150, temperature: 0.7 }),
+    body: JSON.stringify({ model: modelId, messages, max_tokens: 300, temperature: 0.7 }),
   });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
@@ -250,7 +250,7 @@ export default async function handler(req) {
         method: 'POST',
         headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: claudeModelId, max_tokens: 300,
+          model: claudeModelId, max_tokens: 500,
           system: effectiveSystemPrompt,
           messages: messages.filter(m => m.role !== 'system'),
         }),

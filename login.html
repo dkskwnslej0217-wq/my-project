@@ -139,6 +139,15 @@ html,body{width:100%;min-height:100%;background:#000005;font-family:'Orbitron',s
     <div class="field"><label>비밀번호</label><input id="l-pw" type="password" placeholder="비밀번호"/></div>
   </div>
 
+  <!-- 온보딩: 비즈니스 컨텍스트 -->
+  <div id="form-onboard" style="display:none">
+    <div style="font-size:.72rem;letter-spacing:.12em;color:rgba(196,181,253,.8);margin-bottom:.6rem;">내 비즈니스를 AI에게 알려주세요</div>
+    <div style="font-size:.62rem;letter-spacing:.06em;color:rgba(167,139,250,.5);margin-bottom:.9rem;line-height:1.8;">한 번 저장하면 AI가 항상 내 맥락에서 답변합니다.<br>나중에 PROJECT 페이지에서 수정 가능합니다.</div>
+    <textarea id="ob-biz" placeholder="예: 홍대 타투샵 운영, 주 고객 20-30대 여성, 인스타 팔로워 3천명&#10;예: 서울 강남 필라테스 스튜디오, 회원제, 1:1 PT 중심&#10;예: 유튜브 요리 채널 운영 중, 구독자 5천명" style="width:100%;background:rgba(255,255,255,.07);border:1px solid rgba(139,92,246,.35);border-radius:8px;color:#fff;font-family:'Orbitron',sans-serif;font-size:.56rem;letter-spacing:.05em;padding:.65rem .8rem;outline:none;resize:none;min-height:90px;line-height:1.9;transition:border-color .2s;margin-bottom:.4rem;"></textarea>
+    <button onclick="saveAndGoOnboard()" style="width:100%;padding:.7rem;border-radius:10px;border:none;cursor:pointer;background:linear-gradient(135deg,#4338ca,#7c3aed);color:#fff;font-family:'Orbitron',sans-serif;font-size:.85rem;letter-spacing:.2em;margin-top:.4rem;transition:opacity .2s;box-shadow:0 0 20px rgba(109,40,217,.3);">저장하고 시작하기</button>
+    <button onclick="skipOnboard()" style="width:100%;background:none;border:none;cursor:pointer;font-family:'Orbitron',sans-serif;font-size:.65rem;letter-spacing:.15em;color:rgba(167,139,250,.45);padding:.3rem;margin-top:.2rem;">건너뛰기 →</button>
+  </div>
+
   <div id="form-account" style="display:none">
     <div style="font-size:.78rem;letter-spacing:.1em;color:rgba(167,139,250,.6);margin-bottom:1rem;">비밀번호 변경</div>
     <div class="field"><label>현재 비밀번호</label><input id="a-cur" type="password" placeholder="현재 비밀번호"/></div>
@@ -221,18 +230,23 @@ html,body{width:100%;min-height:100%;background:#000005;font-family:'Orbitron',s
 
 let mode='signup';
 let pendingVerifyUserId='';
+let pendingUser=null;
 function switchTab(t){
   mode=t;
   document.getElementById('form-signup').style.display=t==='signup'?'block':'none';
   document.getElementById('form-verify').style.display=t==='verify'?'block':'none';
   document.getElementById('form-login').style.display=t==='login'?'block':'none';
+  document.getElementById('form-onboard').style.display=t==='onboard'?'block':'none';
   document.getElementById('form-account').style.display=t==='account'?'block':'none';
   document.getElementById('tab-signup').className='tab'+(t==='signup'?' active':'');
   document.getElementById('tab-login').className='tab'+(t==='login'?' active':'');
   document.getElementById('tab-account').className='tab'+(t==='account'?' active':'');
-  document.getElementById('submit-btn').style.display=(t==='account')?'none':'block';
+  const hideTabs=['onboard','verify','account'].includes(t);
+  document.getElementById('tab-signup').style.display=hideTabs?'none':'';
+  document.getElementById('tab-login').style.display=hideTabs?'none':'';
+  document.getElementById('submit-btn').style.display=(t==='account'||t==='onboard')?'none':'block';
   if(t==='verify') document.getElementById('submit-btn').textContent='인증하기';
-  else if(t!=='account') document.getElementById('submit-btn').textContent=t==='signup'?'우주로 진입하기':'로그인';
+  else if(!['account','onboard'].includes(t)) document.getElementById('submit-btn').textContent=t==='signup'?'우주로 진입하기':'로그인';
   document.getElementById('msg').textContent='';
   document.getElementById('forgot-wrap').style.display=t==='login'?'block':'none';
 }
@@ -343,6 +357,28 @@ function msg(text,ok){
   el.textContent=text;el.className=ok?'msg-ok':'msg-err';
 }
 
+// ─── 온보딩 ──────────────────────────────────────────
+async function skipOnboard(){
+  if(pendingUser) location.href='/?star='+pendingUser.user_id;
+  else location.href='/';
+}
+
+async function saveAndGoOnboard(){
+  const biz=document.getElementById('ob-biz').value.trim();
+  const token=localStorage.getItem('nova_token');
+  const userId=pendingUser?.user_id;
+  if(biz&&token&&userId){
+    try{
+      await fetch('/api/profile?user_id='+encodeURIComponent(userId),{
+        method:'PATCH',
+        headers:{'Content-Type':'application/json','x-session-token':token},
+        body:JSON.stringify({business_context:biz})
+      });
+    }catch{}
+  }
+  location.href='/?star='+(userId||'');
+}
+
 // ─── ref 파라미터 저장 ────────────────────────────────
 const ref=new URLSearchParams(location.search).get('ref')||localStorage.getItem('nova_ref')||'';
 
@@ -359,11 +395,12 @@ async function submit(){
         body:JSON.stringify({user_id:pendingVerifyUserId,code})});
       const data=await res.json();
       if(!res.ok){msg(data.error||'인증 실패');return;}
-      msg('인증 완료! 우주로 이동 중...','ok');
       localStorage.setItem('nova_user',JSON.stringify(data.user));
       if(data.token) localStorage.setItem('nova_token',data.token);
       localStorage.removeItem('nova_ref');
-      setTimeout(()=>location.href='/?star='+data.user.user_id,1000);
+      pendingUser=data.user;
+      msg('인증 완료!','ok');
+      switchTab('onboard');
     } else if(mode==='signup'){
       const email=document.getElementById('s-email').value.trim();
       const nick=document.getElementById('s-nick').value.trim().toUpperCase();
