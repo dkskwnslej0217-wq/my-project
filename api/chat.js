@@ -85,13 +85,13 @@ async function checkAndIncrementUsage(userId) {
   const headers = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` };
 
   const res = await fetch(
-    `${SUPA_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}&select=plan_type,daily_count,total_chat_count`,
+    `${SUPA_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(userId)}&select=plan_type,daily_count,total_chat_count,business_context`,
     { headers }
   );
   const data = await res.json();
   if (!data.length) return { ok: false, reason: 'user_not_found' };
 
-  const { plan_type, daily_count, total_chat_count } = data[0];
+  const { plan_type, daily_count, total_chat_count, business_context } = data[0];
   const limit = PLAN_LIMITS[plan_type] ?? PLAN_LIMITS.free;
   const count = daily_count ?? 0;
 
@@ -103,7 +103,7 @@ async function checkAndIncrementUsage(userId) {
     body: JSON.stringify({ daily_count: count + 1, total_chat_count: (total_chat_count ?? 0) + 1, last_active: new Date().toISOString() }),
   });
 
-  return { ok: true, count: count + 1, limit, plan_type };
+  return { ok: true, count: count + 1, limit, plan_type, business_context: business_context || null };
 }
 
 const SYSTEM_PROMPT = `당신은 NOVA UNIVERSE AI 어시스턴트입니다.
@@ -175,6 +175,7 @@ export default async function handler(req) {
     }
   }
   let usageInfo = null;
+  let businessContext = null;
   if (userId) {
     const usage = await checkAndIncrementUsage(userId);
     if (!usage.ok) {
@@ -186,15 +187,21 @@ export default async function handler(req) {
       }
     } else {
       usageInfo = { count: usage.count, limit: usage.limit, plan_type: usage.plan_type };
+      businessContext = usage.business_context;
     }
   }
+
+  // 비즈니스 컨텍스트 주입
+  const effectiveSystemPrompt = businessContext
+    ? `${SYSTEM_PROMPT}\n\n[내 비즈니스 정보 — 항상 이 맥락에서 답변]\n${businessContext}`
+    : SYSTEM_PROMPT;
 
   // 대화 히스토리 (최대 10개) + 시스템 프롬프트
   const historyMsgs = Array.isArray(body.history)
     ? body.history.slice(-10).map(m => ({ role: m.role, content: String(m.content).slice(0, 300) }))
     : [];
   const messages = [
-    { role: 'system', content: SYSTEM_PROMPT },
+    { role: 'system', content: effectiveSystemPrompt },
     ...historyMsgs,
     { role: 'user', content: query },
   ];
@@ -203,7 +210,7 @@ export default async function handler(req) {
   let usedModel = null;
 
   // ─── 캐시 조회 (히스토리 없는 단순 질문만) ──────────────
-  const canCache = historyMsgs.length === 0 && query.length >= 10;
+  const canCache = historyMsgs.length === 0 && query.length >= 10 && !businessContext;
   const cacheHash = canCache ? await (async () => {
     const normalized = query.trim().toLowerCase();
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(normalized));
@@ -244,7 +251,7 @@ export default async function handler(req) {
         headers: { 'x-api-key': anthropicKey, 'anthropic-version': '2023-06-01', 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model: claudeModelId, max_tokens: 300,
-          system: SYSTEM_PROMPT,
+          system: effectiveSystemPrompt,
           messages: messages.filter(m => m.role !== 'system'),
         }),
       });

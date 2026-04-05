@@ -322,6 +322,22 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
     </div>
   </div>
 
+  <!-- 비즈니스 컨텍스트 -->
+  <div id="biz-section" style="margin-bottom:2.4rem;">
+    <div class="sec-title">MY BUSINESS AI</div>
+    <div style="background:rgba(10,4,30,.7);border:1px solid rgba(139,92,246,.18);border-radius:14px;padding:1.2rem 1.4rem;">
+      <div style="font-size:.72rem;letter-spacing:.06em;color:rgba(196,181,253,.65);line-height:1.9;margin-bottom:.8rem;">
+        한 번 저장하면 AI가 항상 내 맥락에서 답변합니다.<br>
+        <span style="color:rgba(167,139,250,.4);">예: 홍대 타투샵 운영, 인스타 팔로워 3천, 주 고객 20-30대 여성</span>
+      </div>
+      <textarea id="biz-input" placeholder="내 비즈니스를 설명해주세요..." style="width:100%;background:rgba(255,255,255,.04);border:1px solid rgba(139,92,246,.2);border-radius:8px;color:#e0d8ff;font-family:'Orbitron',sans-serif;font-size:.82rem;letter-spacing:.03em;padding:.65rem .9rem;resize:none;outline:none;line-height:1.8;min-height:72px;transition:border-color .2s;"></textarea>
+      <div style="display:flex;align-items:center;gap:.6rem;margin-top:.5rem;">
+        <button id="biz-save-btn" onclick="saveBizContext()" style="font-size:.7rem;letter-spacing:.1em;background:rgba(109,40,217,.25);border:1px solid rgba(139,92,246,.3);border-radius:6px;color:#c4b5fd;font-family:'Orbitron',sans-serif;padding:.3rem .8rem;cursor:pointer;transition:.2s;">저장</button>
+        <span id="biz-status" style="font-size:.68rem;letter-spacing:.08em;color:rgba(52,211,153,.7);"></span>
+      </div>
+    </div>
+  </div>
+
   <!-- 프로젝트 -->
   <div id="projects-section">
     <div class="sec-title">PROJECTS</div>
@@ -683,7 +699,44 @@ function closeMonthlyReport() {
   localStorage.setItem(`nova_report_${new Date().toISOString().slice(0, 7)}`, '1');
 }
 
+// ─── 비즈니스 컨텍스트 ───────────────────────────────
+async function loadBizContext() {
+  try {
+    const res = await authFetch('/api/profile?user_id=' + encodeURIComponent(me.user_id));
+    if (!res) return;
+    const data = await res.json();
+    if (data.business_context) document.getElementById('biz-input').value = data.business_context;
+  } catch {}
+}
+
+async function saveBizContext() {
+  const val = document.getElementById('biz-input').value.trim();
+  const btn = document.getElementById('biz-save-btn');
+  const status = document.getElementById('biz-status');
+  btn.disabled = true;
+  status.textContent = '';
+  try {
+    const res = await authFetch('/api/profile?user_id=' + encodeURIComponent(me.user_id), {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ business_context: val })
+    });
+    if (!res) return;
+    const data = await res.json();
+    if (data.ok) {
+      status.style.color = 'rgba(52,211,153,.7)';
+      status.textContent = '저장됨 ✓';
+      setTimeout(() => { status.textContent = ''; }, 2000);
+    }
+  } catch {
+    status.style.color = '#f87171';
+    status.textContent = '저장 실패';
+  }
+  btn.disabled = false;
+}
+
 // ─── 초기화 ──────────────────────────────────────────
+loadBizContext();
 loadProjects();
 loadQuests();
 checkMonthlyReport();
