@@ -82,11 +82,35 @@ export default async function handler(req) {
       const totalChats    = (Array.isArray(chats) ? chats : []).reduce((s, u) => s + (u.daily_count || 0), 0);
       const monthlyRevenue = planCounts.starter * 4900 + planCounts.pro * 14900;
 
+      // 플랫폼 레벨 자동 업데이트 (데이터 플라이휠 — 유저 증가 → 모델 업그레이드)
+      const LEVEL_CONFIG = [
+        { level: 1, min_users: 0,   model: 'groq-70b',     next_goal: 50  },
+        { level: 2, min_users: 50,  model: 'claude-haiku', next_goal: 200 },
+        { level: 3, min_users: 200, model: 'claude-sonnet',next_goal: 500 },
+        { level: 4, min_users: 500, model: 'claude-opus',  next_goal: null },
+      ];
+      const lv = [...LEVEL_CONFIG].reverse().find(l => totalUsers >= l.min_users) ?? LEVEL_CONFIG[0];
+      const growth = Math.floor(monthlyRevenue * 0.2);
+      await fetch(`${SUPA_URL}/rest/v1/platform_config?id=eq.1`, {
+        method: 'PATCH',
+        headers: { ...h, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+        body: JSON.stringify({
+          user_count: totalUsers,
+          level: lv.level,
+          active_model: lv.model,
+          next_unlock_goal: lv.next_goal,
+          monthly_revenue: monthlyRevenue,
+          growth_fund: growth,
+          updated_at: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+
       const msg = `📊 <b>NOVA 일일 요약</b>\n\n` +
         `👥 총 유저: <b>${totalUsers}명</b> (+${Array.isArray(newUsers) ? newUsers.length : 0} 신규)\n` +
         `⚪ 무료: ${planCounts.free}명 · 💙 스타터: ${planCounts.starter}명 · 💜 프로: ${planCounts.pro}명\n` +
         `💬 오늘 채팅: <b>${totalChats}회</b>\n` +
-        `💰 월 예상 수익: <b>₩${monthlyRevenue.toLocaleString('ko-KR')}</b>`;
+        `💰 월 예상 수익: <b>₩${monthlyRevenue.toLocaleString('ko-KR')}</b>\n` +
+        `⚡ 플랫폼 레벨: <b>Lv${lv.level}</b> (${lv.model})`;
 
       await sendTelegram(TG_TOKEN, TG_CHAT, msg);
       return new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } });

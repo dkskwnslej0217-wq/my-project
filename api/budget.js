@@ -7,10 +7,10 @@ export default async function handler(_req) {
   try {
     // 유저 플랜별 집계
     const [usersRes, configRes] = await Promise.all([
-      fetch(`${SUPA_URL}/rest/v1/users?select=plan,daily_count`, {
+      fetch(`${SUPA_URL}/rest/v1/users?select=plan_type,daily_count`, {
         headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
       }),
-      fetch(`${SUPA_URL}/rest/v1/platform_config?id=eq.1&select=active_model,total_users`, {
+      fetch(`${SUPA_URL}/rest/v1/platform_config?id=eq.1&select=active_model,user_count`, {
         headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
       }),
     ]);
@@ -21,7 +21,7 @@ export default async function handler(_req) {
     const planCounts = { free: 0, starter: 0, pro: 0 };
     let totalChats = 0;
     for (const u of (Array.isArray(users) ? users : [])) {
-      const plan = u.plan || 'free';
+      const plan = u.plan_type || 'free';
       if (plan in planCounts) planCounts[plan]++;
       totalChats += u.daily_count || 0;
     }

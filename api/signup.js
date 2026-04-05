@@ -103,6 +103,39 @@ export default async function handler(req) {
     });
   }
 
+  // 이메일 인증 코드 생성 (6자리)
+  const code = String(Math.floor(100000 + Math.random() * 900000));
+  const code_expires = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10분
+  await fetch(`${SUPA_URL}/rest/v1/email_verifications`, {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id, code, expires_at: code_expires })
+  }).catch(() => {});
+
+  // Resend 이메일 발송
+  const RESEND_KEY = process.env.RESEND_API_KEY;
+  const FROM = process.env.RESEND_FROM || 'NOVA UNIVERSE <onboarding@resend.dev>';
+  if (RESEND_KEY) {
+    fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: FROM,
+        to: [email],
+        subject: '[NOVA] 이메일 인증 코드',
+        html: `<div style="background:#000005;color:#fff;font-family:monospace;padding:2rem;border-radius:12px;max-width:480px;">
+          <h2 style="color:#a78bfa;letter-spacing:.2em;">NOVA UNIVERSE</h2>
+          <p style="color:rgba(255,255,255,.8);">안녕하세요, <b>${nickname}</b>님!</p>
+          <p style="color:rgba(255,255,255,.7);">아래 6자리 인증 코드를 입력해주세요.</p>
+          <div style="background:rgba(109,40,217,.2);border:1px solid rgba(139,92,246,.4);border-radius:10px;padding:1.5rem;text-align:center;margin:1.5rem 0;">
+            <span style="font-size:2.5rem;letter-spacing:.5em;color:#a78bfa;font-weight:bold;">${code}</span>
+          </div>
+          <p style="color:rgba(255,255,255,.4);font-size:.85rem;">10분 내에 입력해주세요. 본인이 아니라면 무시하세요.</p>
+        </div>`
+      })
+    }).catch(() => {});
+  }
+
   // 신규 가입 Telegram 알림 (fire-and-forget)
   const TG_TOKEN = process.env.TELEGRAM_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
   const TG_CHAT = process.env.TELEGRAM_CHAT_ID;
@@ -118,18 +151,8 @@ export default async function handler(req) {
     }).catch(() => {});
   }
 
-  // 세션 토큰 발급 (30일 만료)
-  const token = crypto.randomUUID();
-  const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-  await fetch(`${SUPA_URL}/rest/v1/sessions`, {
-    method: 'POST',
-    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token, user_id, expires_at })
-  }).catch(() => {});
-
   return new Response(JSON.stringify({
-    user: { user_id, nickname, email, star_x: star.x, star_y: star.y, star_z: star.z,
-            star_color: color, star_size: 1.0 },
-    token
+    user_id, nickname,
+    needs_verification: true
   }), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }

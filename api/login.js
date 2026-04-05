@@ -17,7 +17,7 @@ export default async function handler(req) {
   const headers = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` };
 
   const res = await fetch(
-    `${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=user_id,nickname,email,star_x,star_y,star_z,star_color,star_size,plan_type,invite_count,password_hash`,
+    `${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=user_id,nickname,email,star_x,star_y,star_z,star_color,star_size,plan_type,invite_count,password_hash,email_verified`,
     { headers }
   );
   const users = await res.json();
@@ -60,8 +60,42 @@ export default async function handler(req) {
   if (!passwordValid)
     return new Response(JSON.stringify({ error: '이메일 또는 비밀번호가 틀렸습니다.' }), { status: 401 });
 
-  delete user.password_hash;
+  // 이메일 인증 체크
+  if (!user.email_verified) {
+    // 새 인증 코드 발송
+    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const code_expires = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+    const authHeaders = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' };
+    // 기존 코드 삭제 후 새 코드 저장
+    await fetch(`${SUPA_URL}/rest/v1/email_verifications?user_id=eq.${encodeURIComponent(user.user_id)}`, {
+      method: 'DELETE', headers: authHeaders
+    }).catch(() => {});
+    await fetch(`${SUPA_URL}/rest/v1/email_verifications`, {
+      method: 'POST', headers: authHeaders,
+      body: JSON.stringify({ user_id: user.user_id, code, expires_at: code_expires })
+    }).catch(() => {});
+    const RESEND_KEY = process.env.RESEND_API_KEY;
+    const FROM = process.env.RESEND_FROM || 'NOVA UNIVERSE <onboarding@resend.dev>';
+    if (RESEND_KEY) {
+      fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: FROM, to: [user.email],
+          subject: '[NOVA] 이메일 인증 코드',
+          html: `<div style="background:#000005;color:#fff;font-family:monospace;padding:2rem;border-radius:12px;max-width:480px;"><h2 style="color:#a78bfa;">NOVA UNIVERSE</h2><p>인증 코드:</p><div style="background:rgba(109,40,217,.2);border:1px solid rgba(139,92,246,.4);border-radius:10px;padding:1.5rem;text-align:center;margin:1rem 0;"><span style="font-size:2.5rem;letter-spacing:.5em;color:#a78bfa;font-weight:bold;">${code}</span></div><p style="color:rgba(255,255,255,.4);font-size:.85rem;">10분 내에 입력해주세요.</p></div>`
+        })
+      }).catch(() => {});
+    }
+    return new Response(JSON.stringify({
+      needs_verification: true,
+      user_id: user.user_id,
+      email: user.email
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  }
 
+  delete user.email_verified;
+  delete user.password_hash;
   // 세션 토큰 발급 (30일 만료)
   const token = crypto.randomUUID();
   const expires_at = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();

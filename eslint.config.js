@@ -58,11 +58,4 @@ export default [
       "eqeqeq": ["error", "always"],
     }
   },
-  {
-    files: ["api/_auth.js"],
-    rules: {
-      // _auth.js는 내부 유틸리티 — console 허용
-      "no-console": "off"
-    }
-  }
 ];

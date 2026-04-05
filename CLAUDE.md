@@ -32,8 +32,6 @@
 ## 명령어
 - **"저장해"** → ① L1_state.md 업데이트 (진행 중 + **다음 작업 구체적으로**) ② memory/오늘요약.md에 오늘 세션 append (날짜·한 것·다음 시작점 3줄) ③ 배운 것 L3 기록 ④ 실수 feedback.md ⑤ 성장 방향 1줄 + 오늘↔미해결 연결 1개 (꿈)
 - **"증류해"** → L3 패턴 추출 → L2 압축 추가 → L3 [증류완료] 표시
-- **"업로드 시작해줘"** → output/staging/ 목록 + Make.com 웹훅
-- **"스테이징 목록"** → output/staging/ ls
 
 ## 가치관 (충돌 시 우선순위)
 1. **안전** — 데이터 손실·보안·비용 위험 없음
@@ -103,13 +101,12 @@
 | 결제 | users.plan_type + 토스페이먼츠 웹훅 |
 | 에러·오류 | 파일 + Vercel 로그 |
 | 배포 | pre-commit + 환경변수 |
-| 콘텐츠·스테이징 | output/staging/ + Make.com 웹훅 |
 | 유저·회원 | users 테이블 스키마 |
 | 모델·AI | 플랫폼 레벨 + 폴백 상태 |
-| TTS·영상 | Make.com 시나리오2 상태 |
+| 로그인·인증 | sessions 테이블 + email_verified |
 
 ## 뇌 — 장기 비전 (전두엽·미래 시뮬레이션)
-NOVA 6개월 목표: 유저 100명 / 토스페이먼츠 결제 자동화 / Make.com 영상 자동화
+NOVA 6개월 목표: 유저 100명 / 토스페이먼츠 결제 자동화 / 플랜 전환율 향상
 - 모든 작업 전 자문: "이게 6개월 목표에 가까워지나, 멀어지나?"
 - 멀어지는 방향이면 → 언급. 주노님이 결정하게.
 - 빠른 해결이 장기 구조를 망치면 → 경고 후 진행
@@ -155,13 +152,13 @@ NOVA 6개월 목표: 유저 100명 / 토스페이먼츠 결제 자동화 / Make.
 ---
 
 ## 프로젝트
-이주노(junho)의 NOVA UNIVERSE SaaS. Threads/Instagram/YouTube 콘텐츠 자동화.
-URL: my-project-xi-sand-93.vercel.app | 스택: Vercel Edge + Supabase + Make.com
+이주노(junho)의 NOVA UNIVERSE SaaS. AI 채팅·구독·별 성장 플랫폼.
+URL: my-project-xi-sand-93.vercel.app | 스택: Vercel Edge + Supabase
 
 ## API 현황
 | 파일 | 메서드 | 역할 |
 |------|--------|------|
-| api/chat.js | POST | AI 채팅. Groq→Claude 폴백. 플랜별 한도(free:5/starter:50/pro:300) |
+| api/chat.js | POST | AI 채팅. Groq→Claude 폴백. 플랜별 한도(free:30/starter:100/pro:500) |
 | api/tts.js | POST | TTS. GoogleTTS→ElevenLabs폴백. PIPELINE_SECRET 인증 |
 | api/project.js | GET/POST/PATCH | 프로젝트 CRUD + AI태그분류 + 클러스터 |
 | api/quest.js | GET/POST | 퀘스트 7개 + 별성장 보상 |
@@ -170,9 +167,9 @@ URL: my-project-xi-sand-93.vercel.app | 스택: Vercel Edge + Supabase + Make.co
 | api/login.js | POST | 로그인 (password_hash) |
 | api/signup.js | POST | 회원가입 + 레퍼럴 |
 | api/platform.js | GET/POST | 플랫폼레벨 관리 (PIPELINE_SECRET) |
-| api/run-pipeline.js | POST | 매일08시 YouTube→Gemini→Groq→Claude→Supabase + Telegram알림 |
-| api/alert.js | GET | Telegram 알림 cron |
+| api/alert.js | GET | SaaS cron (daily_count 리셋·세션 정리·이탈감지) |
 | api/history.js | GET | 채팅히스토리 |
+| api/verify-email.js | POST | 이메일 인증 코드 확인 + 세션 발급 |
 
 ## Supabase 테이블
 users(user_id,email,nickname,password_hash,plan_type,daily_count,star_color,star_size,invite_count) /
@@ -186,8 +183,8 @@ Lv1(0~49)→Groq70b / Lv2(50~199)→Haiku / Lv3(200~499)→Sonnet / Lv4(500+)→
 
 ## 환경변수 (값 출력 금지)
 SUPABASE_URL·SUPABASE_SERVICE_KEY·ANTHROPIC_API_KEY·GROQ_API_KEY·GEMINI_API_KEY·
-GOOGLE_TTS_KEY·PEXELS_API_KEY·YOUTUBE_API_KEY·TELEGRAM_BOT_TOKEN·TELEGRAM_CHAT_ID·
-MAKE_SHEETS_WEBHOOK·PIPELINE_SECRET·ALERT_SECRET·MASTER_PASSWORD
+GOOGLE_TTS_KEY·TELEGRAM_BOT_TOKEN·TELEGRAM_CHAT_ID·
+PIPELINE_SECRET·ALERT_SECRET·MASTER_PASSWORD·RESEND_API_KEY
 
 ---
 
@@ -247,8 +244,28 @@ MAKE_SHEETS_WEBHOOK·PIPELINE_SECRET·ALERT_SECRET·MASTER_PASSWORD
 ---
 
 ## 미완성 (우선순위)
-1. 토스페이먼츠 결제 자동화
-2. Make.com 시나리오2: tts→ffmpeg→업로드
-3. 클러스터 실집계 (projects.primary_tag 기반)
-4. 이탈 감지 Telegram
-5. 데이터 플라이휠
+1. 토스페이먼츠 결제 자동화 (주노님 직접 — 사업자등록 후 실키 교체, TOSS_SECRET_KEY Vercel 추가)
+2. 이메일 인증 활성화 (주노님 직접 — 도메인 구매 후 RESEND_API_KEY Vercel 추가)
+
+✅ 완성: 클러스터 실집계 / 이탈 감지 Telegram / 데이터 플라이휠 (summary cron → 플랫폼 레벨 자동 업데이트)
+
+---
+
+## 🔒 파일 접근 규칙
+
+### 절대 건들지 말 것
+| 파일/폴더 | 이유 |
+|-----------|------|
+| `api/*.js` | 배포 중인 코드 — read+merge만, 단독 교체 금지 |
+| `vercel.json` | 배포 구조 — 변경 시 전체 라우팅 깨짐 |
+| `package.json`, `package-lock.json` | 의존성 — 신중히, 확인 후 |
+| `.env`, 환경변수 | 읽기·출력 전면 금지 |
+| Supabase 테이블 직접 수정 | migration 없이 스키마 변경 금지 |
+
+### 건들어도 되는 것
+| 파일/폴더 | 허용 범위 |
+|-----------|----------|
+| `CLAUDE.md` | append·update 가능 |
+| `memory/L1_state.md` | 업데이트가 목적, 자유롭게 |
+| `memory/*.md` | append·update 가능 |
+| HTML 파일 (`*.html`) | read+merge만, 수정 시 연쇄 영향 지도 확인 필수 |
