@@ -449,7 +449,7 @@ async function loadProjects() {
     const res = await fetch('/api/project?user_id=' + encodeURIComponent(me.user_id));
     const projects = await res.json();
     renderProjects(projects);
-    if (projects.length > 0) renderCluster(projects[0].primary_tag);
+    if (projects.length > 0 && projects[0].primary_tag) renderCluster(projects[0].primary_tag);
   } catch {}
 }
 

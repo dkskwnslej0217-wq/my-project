@@ -197,7 +197,7 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
         <div class="plan-limit">300회/일<br>최상위 AI 모델</div>
       </div>
     </div>
-    <button id="upgrade-contact" onclick="contactUpgrade()">구매 문의하기 →</button>
+    <button id="upgrade-contact" onclick="contactUpgrade()">플랜 업그레이드 →</button>
     <button id="upgrade-close" onclick="closeUpgrade()">나중에 할게요</button>
   </div>
 </div>
@@ -275,9 +275,7 @@ html,body{width:100%;height:100%;background:#000008;font-family:'Orbitron',sans-
 function openUpgrade(){ document.getElementById('upgrade-modal').classList.add('open'); }
 function closeUpgrade(){ document.getElementById('upgrade-modal').classList.remove('open'); }
 function contactUpgrade(){
-  const me = (() => { try { return JSON.parse(localStorage.getItem('nova_user')); } catch { return null; } })();
-  const nick = me?.nickname || '';
-  window.open('mailto:contact@nova-universe.ai?subject=플랜%20업그레이드%20문의&body=닉네임:%20' + encodeURIComponent(nick), '_blank');
+  location.href = '/upgrade';
 }
 document.addEventListener('click', e => {
   if (e.target === document.getElementById('upgrade-modal')) closeUpgrade();
