@@ -74,7 +74,7 @@ export default async function handler(req) {
       body: JSON.stringify({
         plan_type: plan,
         plan: plan,
-        subscription_end: subscriptionEnd,
+        paid_until: subscriptionEnd,
       }),
     }
   );

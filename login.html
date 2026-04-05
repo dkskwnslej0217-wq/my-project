@@ -358,9 +358,13 @@ function msg(text,ok){
 }
 
 // ─── 온보딩 ──────────────────────────────────────────
+function _afterAuthRedirect(userId){
+  if(redirectAfterLogin) location.href=redirectAfterLogin;
+  else location.href='/?star='+(userId||'');
+}
+
 async function skipOnboard(){
-  if(pendingUser) location.href='/?star='+pendingUser.user_id;
-  else location.href='/';
+  _afterAuthRedirect(pendingUser?.user_id);
 }
 
 async function saveAndGoOnboard(){
@@ -376,11 +380,13 @@ async function saveAndGoOnboard(){
       });
     }catch{}
   }
-  location.href='/?star='+(userId||'');
+  _afterAuthRedirect(userId);
 }
 
-// ─── ref 파라미터 저장 ────────────────────────────────
-const ref=new URLSearchParams(location.search).get('ref')||localStorage.getItem('nova_ref')||'';
+// ─── URL 파라미터 ─────────────────────────────────────
+const _params=new URLSearchParams(location.search);
+const redirectAfterLogin=_params.get('redirect')||'';
+const ref=_params.get('ref')||localStorage.getItem('nova_ref')||'';
 
 // ─── 제출 ─────────────────────────────────────────────
 async function submit(){
@@ -447,7 +453,7 @@ async function submit(){
       msg('로그인 완료!','ok');
       localStorage.setItem('nova_user',JSON.stringify(data.user));
       if(data.token) localStorage.setItem('nova_token',data.token);
-      setTimeout(()=>location.href='/?star='+data.user.user_id,800);
+      setTimeout(()=>_afterAuthRedirect(data.user.user_id),800);
     }
   } finally {btn.disabled=false;}
 }

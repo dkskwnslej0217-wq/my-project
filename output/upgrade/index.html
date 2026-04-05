@@ -120,7 +120,7 @@ const me = JSON.parse(localStorage.getItem('nova_user') || 'null');
 const CLIENT_KEY = 'test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq'; // TODO: 실 키로 교체
 
 if (!me) {
-  location.href = '/login.html?redirect=/output/upgrade/';
+  location.href = '/login?redirect=/upgrade';
 }
 
 // 현재 플랜 표시
