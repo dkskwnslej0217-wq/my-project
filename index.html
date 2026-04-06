@@ -787,7 +787,7 @@ animate();
   const panel=document.getElementById('user-panel');
   const raw=localStorage.getItem('nova_user');
   if(!raw){
-    panel.innerHTML='<a href="/login.html" id="login-btn">LOGIN</a>';
+    panel.innerHTML='<a href="/login" id="login-btn">LOGIN</a>';
     setTimeout(()=>panel.style.opacity='1',1500);
     return;
   }
@@ -1026,7 +1026,7 @@ async function obNext(){
       const raw=localStorage.getItem('nova_user');
       const isLoggedIn=raw&&JSON.parse(raw).user_id;
       if(isLoggedIn){btn.textContent='우주 탐험 시작 →';btn.onclick=obDone;}
-      else{btn.textContent='무료로 시작하기 →';btn.onclick=()=>location.href='/login.html';}
+      else{btn.textContent='무료로 시작하기 →';btn.onclick=()=>location.href='/login';}
       return;
     }
   }

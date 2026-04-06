@@ -136,7 +136,7 @@ function showMsg(text, ok) {
 }
 
 async function startPayment(plan, amount) {
-  if (!me) { location.href = '/login.html'; return; }
+  if (!me) { location.href = '/login?redirect=/upgrade'; return; }
 
   const tossPayments = TossPayments(CLIENT_KEY);
   const orderId = `NOVA-${plan.toUpperCase()}-${Date.now()}`;

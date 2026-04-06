@@ -380,14 +380,14 @@ canvas{position:fixed;inset:0;z-index:0;pointer-events:none;}
 
 // ─── 유저 ────────────────────────────────────────────
 const me = (() => { try { return JSON.parse(localStorage.getItem('nova_user')); } catch { return null; } })();
-if (!me) { location.href = '/login.html'; }
+if (!me) { location.href = '/login?redirect=/project'; }
 const authHeader = () => ({ 'x-session-token': localStorage.getItem('nova_token') || '' });
 async function authFetch(url, options = {}) {
   const res = await fetch(url, { ...options, headers: { ...options.headers, ...authHeader() } });
   if (res.status === 401) {
     localStorage.removeItem('nova_user');
     localStorage.removeItem('nova_token');
-    location.href = '/login.html';
+    location.href = '/login?redirect=/project';
     return null;
   }
   return res;

@@ -325,7 +325,7 @@ async function loadHistory() {
     const res = await fetch('/api/history?user_id=' + encodeURIComponent(urlId), {
       headers: { 'x-session-token': token }
     });
-    if (res.status === 401) { localStorage.removeItem('nova_user'); localStorage.removeItem('nova_token'); location.href = '/login.html'; return []; }
+    if (res.status === 401) { localStorage.removeItem('nova_user'); localStorage.removeItem('nova_token'); location.href = '/login?redirect=/chat'; return []; }
     const data = res.ok ? await res.json() : [];
     _vaultHistory = data;
     return data;

@@ -118,8 +118,9 @@ export default async function handler(req) {
 
     // ─── 3. 신규 유저 알림 (가입 시 즉시 호출) ───────────
     if (type === 'new_user') {
-      const body = await req.json().catch(() => ({}));
-      const { nickname, plan } = body;
+      const nickname = url.searchParams.get('nickname') || '익명';
+      const plan = url.searchParams.get('plan') || 'free';
+      const body = { nickname, plan };
       const msg = `🌟 <b>신규 유저 가입!</b>\n닉네임: ${nickname || '익명'}\n플랜: ${plan || 'free'}`;
       await sendTelegram(TG_TOKEN, TG_CHAT, msg);
       return new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } });
