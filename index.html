@@ -235,6 +235,41 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 #fb-cancel{background:rgba(255,255,255,.06);color:rgba(167,139,250,.75);}
 #fb-send{background:linear-gradient(135deg,#4338ca,#7c3aed);color:#fff;}
 #fb-done{display:none;font-size:.85rem;letter-spacing:.08em;color:#c4b5fd;text-align:center;margin-top:.7rem;}
+
+/* 비로그인 히어로 */
+#landing-hero{
+  display:none;
+  position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:18;
+  width:min(92vw,420px);
+  background:rgba(4,0,20,.75);
+  border:1px solid rgba(139,92,246,.25);
+  border-radius:16px;
+  padding:1.4rem 1.6rem 1.2rem;
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  text-align:center;
+  opacity:0;transition:opacity .8s ease;
+}
+#hero-tag{font-size:.55rem;letter-spacing:.35em;color:rgba(167,139,250,.6);margin-bottom:.6rem;}
+#hero-title{font-size:clamp(.95rem,2.2vw,1.15rem);font-weight:900;letter-spacing:.12em;color:#fff;
+  text-shadow:0 0 20px #6d28d9;line-height:1.4;margin-bottom:.7rem;}
+#hero-features{display:flex;justify-content:center;gap:1rem;margin-bottom:1.1rem;flex-wrap:wrap;}
+.hero-feat{font-size:.62rem;letter-spacing:.1em;color:rgba(196,181,253,.75);
+  background:rgba(109,40,217,.15);border:1px solid rgba(139,92,246,.2);
+  border-radius:20px;padding:.25rem .7rem;}
+#hero-cta{
+  display:block;width:100%;
+  padding:.75rem;border:none;border-radius:10px;
+  background:linear-gradient(135deg,#4338ca,#7c3aed);
+  color:#fff;font-family:'Orbitron',sans-serif;
+  font-size:.8rem;letter-spacing:.15em;font-weight:700;
+  cursor:pointer;transition:.2s;
+  box-shadow:0 0 20px rgba(109,40,217,.4);
+}
+#hero-cta:hover{box-shadow:0 0 30px rgba(139,92,246,.6);transform:translateY(-1px);}
+#hero-login{margin-top:.6rem;font-size:.58rem;letter-spacing:.1em;color:rgba(167,139,250,.5);}
+#hero-login a{color:rgba(167,139,250,.8);text-decoration:none;}
+#hero-login a:hover{color:#c4b5fd;}
 </style>
 </head>
 <body>
@@ -296,6 +331,18 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
     <button id="ob-next" onclick="obNext()">다음 →</button>
     <button id="ob-skip" onclick="obDone()">건너뛰기</button>
   </div>
+</div>
+
+<div id="landing-hero">
+  <div id="hero-tag">AI BUSINESS PLATFORM</div>
+  <div id="hero-title">AI로 비즈니스를<br>자동화하세요</div>
+  <div id="hero-features">
+    <span class="hero-feat">✦ AI 채팅</span>
+    <span class="hero-feat">◎ 콘텐츠 자동화</span>
+    <span class="hero-feat">⬡ 프로젝트 관리</span>
+  </div>
+  <button id="hero-cta" onclick="location.href='/login'">무료로 시작하기 →</button>
+  <div id="hero-login">이미 계정이 있나요? <a href="/login">로그인</a></div>
 </div>
 
 <nav id="bottom-nav">
@@ -788,7 +835,12 @@ animate();
   const raw=localStorage.getItem('nova_user');
   if(!raw){
     panel.innerHTML='<a href="/login" id="login-btn">LOGIN</a>';
-    setTimeout(()=>panel.style.opacity='1',1500);
+    setTimeout(()=>{
+      panel.style.opacity='1';
+      const hero=document.getElementById('landing-hero');
+      hero.style.display='block';
+      setTimeout(()=>hero.style.opacity='1',50);
+    },1800);
     return;
   }
   let user;
