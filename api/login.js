@@ -17,7 +17,7 @@ export default async function handler(req) {
   const headers = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` };
 
   const res = await fetch(
-    `${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=user_id,nickname,email,star_x,star_y,star_z,star_color,star_size,plan_type,invite_count,password_hash,email_verified`,
+    `${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=user_id,nickname,email,star_x,star_y,star_z,star_color,star_size,plan_type,invite_count,invite_code,password_hash,email_verified`,
     { headers }
   );
   const users = await res.json();
@@ -104,6 +104,19 @@ export default async function handler(req) {
     headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({ token, user_id: user.user_id, expires_at })
   }).catch(() => {});
+
+  // invite_code 없는 기존 유저 → 자동 생성
+  if (!user.invite_code) {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const newCode = Array.from(crypto.getRandomValues(new Uint8Array(6)))
+      .map(b => chars[b % chars.length]).join('');
+    await fetch(`${SUPA_URL}/rest/v1/users?user_id=eq.${user.user_id}`, {
+      method: 'PATCH',
+      headers: { ...headers, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ invite_code: newCode })
+    }).catch(() => {});
+    user.invite_code = newCode;
+  }
 
   // 별 성장 로직: invite_count → star_size 자동 갱신
   const ic = user.invite_count || 0;

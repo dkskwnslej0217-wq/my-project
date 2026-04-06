@@ -12,6 +12,13 @@ function randomStar() {
   };
 }
 
+// 초대코드 생성 (6자리, 혼동 문자 제외)
+function generateInviteCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  return Array.from(crypto.getRandomValues(new Uint8Array(6)))
+    .map(b => chars[b % chars.length]).join('');
+}
+
 // 닉네임 기반 고유 색상
 function nickColor(nick) {
   const colors = ['#a78bfa','#60a5fa','#34d399','#fbbf24','#f87171',
@@ -29,7 +36,8 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: '잘못된 요청입니다.' }), { status: 400 });
   }
 
-  const { email, nickname, password, referrer_id } = body;
+  const { email, nickname, password } = body;
+  let { referrer_id } = body;
   if (!email || !nickname || !password)
     return new Response(JSON.stringify({ error: '필수 항목이 누락됐습니다.' }), { status: 400 });
   if (password.length < 8)
@@ -39,6 +47,13 @@ export default async function handler(req) {
   const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
   const headers = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`,
                     'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+
+  // referrer_id가 invite_code인 경우 user_id로 변환 (invite_code는 '_' 없음)
+  if (referrer_id && !referrer_id.includes('_')) {
+    const refRes = await fetch(`${SUPA_URL}/rest/v1/users?invite_code=eq.${encodeURIComponent(referrer_id)}&select=user_id`, { headers });
+    const refData = await refRes.json();
+    referrer_id = refData[0]?.user_id || null;
+  }
 
   // 이메일 중복 체크
   const check = await fetch(`${SUPA_URL}/rest/v1/users?email=eq.${encodeURIComponent(email)}&select=user_id`,
@@ -58,6 +73,7 @@ export default async function handler(req) {
   const star = randomStar();
   const user_id = nickname.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString(36);
   const color = nickColor(nickname);
+  const invite_code = generateInviteCode();
 
   // 유저 생성
   const insert = await fetch(`${SUPA_URL}/rest/v1/users`, {
@@ -76,6 +92,7 @@ export default async function handler(req) {
       star_size: 1.0,
       referrer_id: referrer_id || null,
       invite_count: 0,
+      invite_code,
     })
   });
 
@@ -145,7 +162,7 @@ export default async function handler(req) {
     return new Response(JSON.stringify({
       user_id, nickname,
       needs_verification: false,
-      user: { user_id, nickname, email, plan_type: 'free', star_color: color, star_size: 1.0, star_x: star.x, star_y: star.y, star_z: star.z, invite_count: 0 },
+      user: { user_id, nickname, email, plan_type: 'free', star_color: color, star_size: 1.0, star_x: star.x, star_y: star.y, star_z: star.z, invite_count: 0, invite_code },
       token
     }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   }

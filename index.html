@@ -796,7 +796,7 @@ animate();
 
   document.getElementById('user-nickname').textContent='✦ '+user.nickname;
   document.getElementById('invite-wrap').style.display='flex';
-  const inviteLink=location.origin+'/?ref='+user.user_id;
+  const inviteLink=location.origin+'/?ref='+(user.invite_code||user.user_id);
   document.getElementById('invite-link').value=inviteLink;
   document.getElementById('copy-btn').onclick=function(){
     navigator.clipboard.writeText(inviteLink).then(()=>{
