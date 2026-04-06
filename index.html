@@ -835,9 +835,23 @@ animate();
   const raw=localStorage.getItem('nova_user');
   if(!raw){
     panel.innerHTML='<a href="/login" id="login-btn">LOGIN</a>';
-    setTimeout(()=>{
+    setTimeout(async()=>{
       panel.style.opacity='1';
       const hero=document.getElementById('landing-hero');
+      // 추천인 코드로 접속한 경우 초대 문구 표시
+      const refCode=new URLSearchParams(location.search).get('ref')||localStorage.getItem('nova_ref');
+      if(refCode){
+        try{
+          const r=await fetch(`/api/users?invite_code=${encodeURIComponent(refCode)}`);
+          const d=await r.json();
+          const nick=d[0]?.nickname;
+          if(nick){
+            const tag=document.getElementById('hero-tag');
+            tag.textContent='🌟 '+nick+'님의 초대로 왔어요';
+            tag.style.color='rgba(196,181,253,.9)';
+          }
+        }catch{/* 무시 */}
+      }
       hero.style.display='block';
       setTimeout(()=>hero.style.opacity='1',50);
     },1800);
