@@ -43,10 +43,15 @@ export default async function handler(req) {
       fetch(`${SUPA_URL}/rest/v1/referrals?referred_id=eq.${encodeURIComponent(user_id)}`, { method: 'DELETE', headers: h }),
     ]);
 
+    // ai_logs도 삭제 시도 (FK 있을 수 있음)
+    await fetch(`${SUPA_URL}/rest/v1/ai_logs?user_id=eq.${encodeURIComponent(user_id)}`, { method: 'DELETE', headers: h }).catch(() => {});
+
     // 유저 삭제
     const del = await fetch(`${SUPA_URL}/rest/v1/users?user_id=eq.${encodeURIComponent(user_id)}`, { method: 'DELETE', headers: h });
-    if (!del.ok)
-      return new Response(JSON.stringify({ error: '삭제 실패' }), { status: 500 });
+    if (!del.ok) {
+      const errText = await del.text();
+      return new Response(JSON.stringify({ error: `삭제 실패: ${errText}` }), { status: 500 });
+    }
 
     return new Response(JSON.stringify({ ok: true }), { headers: { 'content-type': 'application/json' } });
   }

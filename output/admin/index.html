@@ -211,7 +211,8 @@ async function deleteUser(user_id, nickname) {
     alert(`${nickname} 삭제 완료`);
     tryLoad(adminKey);
   } else {
-    alert('삭제 실패');
+    const data = await res.json().catch(() => ({}));
+    alert(`삭제 실패: ${data.error || res.status}`);
   }
 }
 
