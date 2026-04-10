@@ -42,6 +42,9 @@ export default async function handler(req) {
     return new Response(JSON.stringify({ error: '필수 항목이 누락됐습니다.' }), { status: 400 });
   if (password.length < 8)
     return new Response(JSON.stringify({ error: '비밀번호는 8자 이상이어야 합니다.' }), { status: 400 });
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email))
+    return new Response(JSON.stringify({ error: '올바른 이메일 주소를 입력해주세요.' }), { status: 400 });
 
   const SUPA_URL = process.env.SUPABASE_URL;
   const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;

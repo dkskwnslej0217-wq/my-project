@@ -39,6 +39,10 @@ h2{font-size:.75rem;letter-spacing:.25em;color:rgba(167,139,250,.8);margin-botto
 table{width:100%;border-collapse:collapse;font-size:.68rem;}
 thead th{text-align:left;padding:8px 10px;border-bottom:1px solid rgba(139,92,246,.2);
   letter-spacing:.12em;color:rgba(167,139,250,.7);white-space:nowrap;}
+.del-btn{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);
+  color:#f87171;border-radius:4px;padding:3px 8px;font-size:.58rem;font-family:'Orbitron',sans-serif;
+  letter-spacing:.08em;cursor:pointer;}
+.del-btn:hover{background:rgba(248,113,113,.25);}
 tbody tr{border-bottom:1px solid rgba(255,255,255,.04);transition:background .15s;}
 tbody tr:hover{background:rgba(139,92,246,.06);}
 tbody td{padding:8px 10px;white-space:nowrap;}
@@ -105,6 +109,7 @@ nav.bottom-nav a svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke
           <th>초대</th>
           <th>별 색상</th>
           <th>가입일</th>
+          <th>삭제</th>
         </tr>
       </thead>
       <tbody id="user-tbody"></tbody>
@@ -179,6 +184,7 @@ function render({ users, logs }) {
       <td>${u.invite_count ?? 0}</td>
       <td><span class="star-dot" style="background:${color}"></span>${color}</td>
       <td>${date}</td>
+      <td><button class="del-btn" onclick="deleteUser('${esc(u.user_id)}','${esc(u.nickname)}')">삭제</button></td>
     </tr>`;
   }).join('');
 
@@ -192,6 +198,21 @@ function render({ users, logs }) {
       <span class="log-time">${t}</span>
     </div>`;
   }).join('');
+}
+
+async function deleteUser(user_id, nickname) {
+  if (!confirm(`"${nickname}" 삭제할까요?\n채팅·퀘스트·프로젝트 전부 삭제됩니다.`)) return;
+  const res = await fetch('/api/admin', {
+    method: 'DELETE',
+    headers: { 'x-admin-key': adminKey, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id })
+  });
+  if (res.ok) {
+    alert(`${nickname} 삭제 완료`);
+    tryLoad(adminKey);
+  } else {
+    alert('삭제 실패');
+  }
 }
 
 function esc(s) {
